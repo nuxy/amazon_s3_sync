@@ -1,0 +1,19 @@
+amazon_s3_sync.config:
+  path: 'admin/config/services/amazon_s3_sync'
+  defaults:
+    _title: 'Amazon S3 sync'
+    _form: '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+amazon_s3_sync.file_manager:
+  path: 'admin/content/amazon_s3_sync/files'
+  defaults:
+    _title: 'Amazon S3 files'
+  requirements:
+    _permission: 'administer site configuration'
+
+amazon_s3_sync.file_manager_delete:
+  path: 'admin/content/amazon_s3_sync/files/delete'
+  requirements:
+    _permission: 'administer site configuration'

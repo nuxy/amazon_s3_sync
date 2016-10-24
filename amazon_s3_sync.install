@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Synchronize files for a Content Type with an Amazon S3 bucket.
+ */
+
+function amazon_s3_sync_schema() {
+  $schema['amazon_s3_sync_files'] = array(
+    'description' => 'List of Amazon S3 synced files',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'modified' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'fid' => array('fid'),
+      'created' => array('created'),
+      'modified' => array('modified'),
+    ),
+    'primary key' => array('id'),
+  );
+
+  return $schema;
+}

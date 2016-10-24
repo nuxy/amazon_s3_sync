@@ -1,0 +1,6 @@
+amazon_s3_sync.config:
+  title: 'Amazon S3 sync'
+  description: 'Configure the S3 bucket name, AWS region/endpoint, and file synchronization options.'
+  weight: 10
+  route_name: amazon_s3_sync.config
+  parent: system.admin_config_services

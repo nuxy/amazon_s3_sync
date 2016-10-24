@@ -1,0 +1,5 @@
+amazon_s3_sync.files_manager:
+  title: 'Amazon S3 sync'
+  route_name: amazon_s3_sync.files_manager
+  base_route: entity.content.collection
+  weight: 15

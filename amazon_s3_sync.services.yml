@@ -1,0 +1,8 @@
+services:
+  amazon_s3_sync.files_manager:
+    class: Drupal\amazon_s3_sync\Amazon_S3_SyncManager
+    arguments: ['@amazon_s3_sync.file_storage', '@string_translation', '@renderer']
+
+  amazon_s3_sync.file_storage:
+    class: Drupal\amazon_s3_sync\Amazon_S3_SyncStorage
+    arguments: ['@database']
