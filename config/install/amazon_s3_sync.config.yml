@@ -1,5 +1,3 @@
-s3cmd_path: /usr/bin/s3cmd
-
 aws_regions:
   us-east-1:
     name: 'US East (N. Virginia)'
@@ -37,3 +35,9 @@ aws_regions:
   sa-east-1:
     name: 'South America (São Paulo)'
     endpoint: s3-sa-east-1.amazonaws.com
+
+s3_bucket_name: ~
+s3_access_key: ~
+s3_secret_key: ~
+
+s3cmd_path: /usr/bin/s3cmd
