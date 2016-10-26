@@ -54,9 +54,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $regions = $config->get('aws_regions');
 
     $header = array(
-      'name' => 'Region Name',
-      'code' => 'Region',
-      'endpoint' => 'Endpoint',
+      'name' => t('Region Name'),
+      'code' => t('Region'),
+      'endpoint' => t('Endpoint'),
     );
 
     $options = array();
@@ -89,52 +89,10 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       );
     }
 
-    if (!Settings::get('s3_bucket_name') || !Settings::get('s3_access_key') || !Settings::get('s3_secret_key')) {
-      $form['amazon_s3'] = array(
-        '#type' => 'details',
-        '#title' => 'Simple Storage Service (S3)',
-        '#description' => 'For the security conscience the following values can be defined in the <em>settings.php</em>',
-        '#open' => TRUE,
-      );
-
-      if (!Settings::get('s3_bucket_name')) {
-        $form['amazon_s3']['bucket_name'] = array(
-          '#type' => 'textfield',
-          '#title' => 'S3 bucket name',
-          '#description' => 'Must be a valid bucket that has <em>View Permissions</em> granted.',
-          '#default_value' => $config->get('s3_bucket_name'),
-          '#maxlength' => 63,
-          '#required' => TRUE,
-        );
-      }
-
-      if (!Settings::get('s3_access_key')) {
-        $form['amazon_s3']['access_key'] = array(
-          '#type' => 'textfield',
-          '#title' => 'Access Key',
-          '#description' => 'Enter your AWS access key.',
-          '#default_value' => $config->get('s3_access_key'),
-          '#maxlength' => 20,
-          '#required' => TRUE,
-        );
-      }
-
-      if (!Settings::get('s3_secret_key')) {
-        $form['amazon_s3']['secret_key'] = array(
-          '#type' => 'textfield',
-          '#title' => 'Secret Key',
-          '#description' => 'Enter your AWS secret key.',
-          '#default_value' => $config->get('s3_secret_key'),
-          '#maxlength' => 40,
-          '#required' => TRUE,
-        );
-      }
-    }
-
     $form['s3cmd'] = array(
       '#type' => 'details',
       '#title' => 's3cmd',
-      '#description' => 'Command line tool for managing Amazon S3 and CloudFront services.',
+      '#description' => t('Command line tool for managing Amazon S3 and CloudFront services.'),
       '#open' => TRUE,
     );
 
@@ -150,8 +108,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $form['s3cmd']['path'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Path to binary'),
-      '#description' => $this->t('Must be an absolute path. This may vary based on your server set-up.'),
+      '#title' => t('Path to binary'),
+      '#description' => t('Must be an absolute path. This may vary based on your server set-up.'),
       '#default_value' => $config->get('s3cmd_path'),
       '#maxlength' => 25,
       '#required' => TRUE,
@@ -161,11 +119,62 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form['s3cmd']['path']['#attributes']['class'][] = 'error';
     }
 
-    $form['domain_name'] = array(
-      '#title' => $this->t('Domain name'),
-      '#description' => 'DNS configured domain name',
-      '#default_value' => $config->get('domain_name'),
-      '#maxlength' => 63,
+    if (!Settings::get('s3_bucket_name') || !Settings::get('s3_access_key') || !Settings::get('s3_secret_key')) {
+      $form['amazon_s3'] = array(
+        '#type' => 'details',
+        '#title' => t('Simple Storage Service (S3)'),
+        '#description' => t('For the security conscience the following values can be defined in the <em>settings.php</em>'),
+        '#open' => TRUE,
+      );
+
+      if (!Settings::get('s3_bucket_name')) {
+        $form['amazon_s3']['bucket_name'] = array(
+          '#type' => 'textfield',
+          '#title' => t('S3 bucket name'),
+          '#description' => t('Must be a valid bucket that has <em>View Permissions</em> granted.'),
+          '#default_value' => $config->get('s3_bucket_name'),
+          '#maxlength' => 63,
+          '#required' => TRUE,
+        );
+      }
+
+      if (!Settings::get('s3_access_key')) {
+        $form['amazon_s3']['access_key'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Access Key'),
+          '#description' => t('Enter your AWS access key.'),
+          '#default_value' => $config->get('s3_access_key'),
+          '#maxlength' => 20,
+          '#required' => TRUE,
+        );
+      }
+
+      if (!Settings::get('s3_secret_key')) {
+        $form['amazon_s3']['secret_key'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Secret Key'),
+          '#description' => t('Enter your AWS secret key.'),
+          '#default_value' => $config->get('s3_secret_key'),
+          '#maxlength' => 40,
+          '#required' => TRUE,
+        );
+      }
+    }
+
+    $form['virtual_hosting'] = array(
+      '#type' => 'details',
+      '#title' => t('Virtual Hosting Buckets'),
+      '#description' => t('If your bucket name and domain name are <em>files.drupal.com</em>, the CNAME record should alias <em>files.drupal.com.s3.amazonaws.com</em>'),
+      '#open' => TRUE,
+    );
+
+    $form['virtual_hosting']['common_name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Host name'),
+      '#description' => t('Must be a fully qualified domain name.'),
+      '#default_value' => $config->get('common_name'),
+      '#maxlength' => 255,
+      '#required' => TRUE,
     );
 
     return parent::buildForm($form, $form_state);
@@ -183,9 +192,24 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config')
-      ->set('bucket_name', $form_state->getValue('bucket_name'))
       ->set('aws_region',  $form_state->getValue('aws_region'))
-      ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'));
+      ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
+      ->set('common_name', $form_state->getValue('common_name'));
+
+    if (!Settings::get('s3_bucket_name') || !Settings::get('s3_access_key') || !Settings::get('s3_secret_key')) {
+      if ($config->get('s3_bucket_name')) {
+        $config->set('s3_bucket_name', $form_state->getValue('bucket_name'));
+      }
+
+      if ($config->get('s3_access_key')) {
+        $config->set('s3_access_key', $form_state->getValue('access_key'));
+      }
+
+      if ($config->get('s3_secret_key')) {
+        $config->set('s3_secret_key', $form_state->getValue('secret_key'));
+      }
+    }
+
     $config->save();
 
     parent::submitForm($form, $form_state);
