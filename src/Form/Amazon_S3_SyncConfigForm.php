@@ -53,20 +53,23 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $regions = $config->get('aws_regions');
 
-    $header = array(
+    $table_header = array(
       'name' => t('Region Name'),
       'code' => t('Region'),
       'endpoint' => t('Endpoint'),
     );
 
-    $options = array();
+    $table_defaults = array();
+    $table_options = array();
 
     foreach ($regions as $code => $region) {
 
       // @todo
       // Enable support for multiple regions.
       if ($code == 'us-east-1') {
-        $options[$code] = array(
+        $table_defaults[$code] = (isset($region['enabled']) && $region['enabled'] == TRUE) ? TRUE : FALSE;
+
+        $table_options[$code] = array(
           'name' => $region['name'],
           'code' => $code,
           'endpoint' => $region['endpoint'],
@@ -76,8 +79,10 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $form['aws_region'] = array(
       '#type' => 'tableselect',
-      '#header' => $header,
-      '#options' => $options,
+      '#header' => $table_header,
+      '#options' => $table_options,
+      '#default_value' => $table_defaults,
+      '#multiple' => TRUE,
       '#required' => TRUE,
     );
 
@@ -110,13 +115,14 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Path to binary'),
       '#description' => t('Must be an absolute path. This may vary based on your server set-up.'),
-      '#default_value' => $config->get('s3cmd_path'),
+      '#default_value' => NULL,
       '#maxlength' => 25,
       '#required' => TRUE,
     );
 
     if (!$s3cmd_exists) {
       $form['s3cmd']['path']['#attributes']['class'][] = 'error';
+      $form['s3cmd']['path']['#attributes']['placeholder'] = $config->get('s3cmd_path');
     }
 
     if (!Settings::get('s3_bucket_name') || !Settings::get('s3_access_key') || !Settings::get('s3_secret_key')) {
@@ -170,7 +176,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $form['virtual_hosting']['common_name'] = array(
       '#type' => 'textfield',
-      '#title' => t('Host name'),
+      '#title' => t('Common name'),
       '#description' => t('Must be a fully qualified domain name.'),
       '#default_value' => $config->get('common_name'),
       '#maxlength' => 255,
@@ -184,7 +190,27 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    if (!file_exists($form_state->getValue('s3cmd_path'))) {
+      $form_state->setErrorByName('s3cmd_path', t('The path to the s3cmd binary does not exist.'));
 
+      drupal_get_messages('error');
+    }
+
+    if (!Settings::get('s3_bucket_name') && !preg_match('/^[^\.\-]?[a-zA-Z0-9\.\-]{1,63}[^\.\-]?$/', $form_state->getValue('bucket_name'))) {
+      $form_state->setErrorByName('bucket_name', t('The S3 bucket name entered is not valid.'));
+    }
+
+    if (!Settings::get('s3_access_key') && !preg_match('/^[A-Z0-9]{20}$/', $form_state->getValue('access_key'))) {
+      $form_state->setErrorByName('access_key', t('The S3 access key entered is not valid.'));
+    }
+
+    if (!Settings::get('s3_secret_key') && !preg_match('/^[a-zA-Z0-9\+\/]{39,40}$/', $form_state->getValue('secret_key'))) {
+      $form_state->setErrorByName('secret_key', t('The S3 secret key entered is not valid.'));
+    }
+
+    if (gethostbyname($form_state->getValue('common_name')) == $form_state->getValue('common_name')) {
+      $form_state->setErrorByName('common_name', t('The common name entered is not a valid CNAME record.'));
+    }
   }
 
   /**
@@ -196,18 +222,16 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'));
 
-    if (!Settings::get('s3_bucket_name') || !Settings::get('s3_access_key') || !Settings::get('s3_secret_key')) {
-      if ($config->get('s3_bucket_name')) {
-        $config->set('s3_bucket_name', $form_state->getValue('bucket_name'));
-      }
+    if ($config->get('s3_bucket_name') && !Settings::get('s3_bucket_name')) {
+      $config->set('s3_bucket_name', $form_state->getValue('bucket_name'));
+    }
 
-      if ($config->get('s3_access_key')) {
-        $config->set('s3_access_key', $form_state->getValue('access_key'));
-      }
+    if ($config->get('s3_access_key') && !Settings::get('s3_access_key')) {
+      $config->set('s3_access_key', $form_state->getValue('access_key'));
+    }
 
-      if ($config->get('s3_secret_key')) {
-        $config->set('s3_secret_key', $form_state->getValue('secret_key'));
-      }
+    if ($config->get('s3_secret_key') && !Settings::get('s3_secret_key')) {
+      $config->set('s3_secret_key', $form_state->getValue('secret_key'));
     }
 
     $config->save();
