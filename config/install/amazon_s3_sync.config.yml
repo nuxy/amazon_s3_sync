@@ -41,3 +41,5 @@ s3_access_key: ~
 s3_secret_key: ~
 
 s3cmd_path: /usr/bin/s3cmd
+
+host_name: ~
