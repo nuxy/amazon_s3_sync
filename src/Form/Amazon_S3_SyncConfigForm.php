@@ -7,6 +7,7 @@
 
 namespace Drupal\amazon_s3_sync\Form;
 
+use Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -20,13 +21,34 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
   /**
+   * The settings instance.
+   *
+   * var \Drupal\Core\Site\Settings
+   */
+  protected $settings;
+
+  /**
+   * The Amazon_S3_SyncS3cmd service.
+   *
+   * var \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface
+   */
+  protected $s3cmd;
+
+  /**
    * Constructs a Amazon_S3_SyncConfigForm object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
+   *   The configuration factory.
+   * @param \Drupal\Core\Site\Settings $settings
+   *   The settings instance.
+   * @param \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface $s3cmd
+   *   The Amazon_S3_SyncS3cmd service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, Amazon_S3_SyncS3cmdInterface $s3cmd) {
     parent::__construct($config_factory);
+
+    $this->settings = $settings;
+    $this->s3cmd = $s3cmd;
   }
 
   /**
@@ -41,7 +63,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static (
-      $container->get('config.factory')
+      $container->get('config.factory'),
+      $container->get('settings'),
+      $container->get('amazon_s3_sync.s3cmd')
     );
   }
 
@@ -50,8 +74,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config');
-
-    $regions = $config->get('aws_regions');
 
     $table_header = array(
       'name' => t('Region Name'),
@@ -62,19 +84,19 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $table_defaults = array();
     $table_options = array();
 
-    foreach ($regions as $code => $region) {
+    foreach ($config->get('aws_regions') as $code => $region) {
+      $enabled = in_array($code, $config->get('aws_region'));
 
-      // @todo
-      // Enable support for multiple regions.
-      if ($code == 'us-east-1') {
-        $table_defaults[$code] = (in_array($code, $config->get('aws_region'))) ? TRUE : FALSE;
+      $table_defaults[$code] = $enabled;
 
-        $table_options[$code] = array(
-          'name' => $region['name'],
-          'code' => $code,
-          'endpoint' => $region['endpoint'],
-        );
-      }
+      $bucket_name = $config->get('s3_bucket_name');
+      $endpoint = ($bucket_name && $enabled) ? "$bucket_name.{$region['endpoint']}" : $region['endpoint'];
+
+      $table_options[$code] = array(
+        'name' => $region['name'],
+        'code' => $code,
+        'endpoint' => $endpoint,
+      );
     }
 
     $form['aws_region'] = array(
@@ -83,7 +105,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#options' => $table_options,
       '#default_value' => $table_defaults,
       '#multiple' => TRUE,
-      '#required' => TRUE,
     );
 
     if ($config->get('aws_region') && $config->get('s3_bucket_name') && $config->get('s3cmd_path')) {
@@ -105,9 +126,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     if (!$s3cmd_exists) {
       $project_url = Url::fromUri('https://github.com/s3tools/s3cmd');
-
       $link = \Drupal::l('https://github.com/s3tools/s3cmd', $project_url);
-
       drupal_set_message(t('The required dependency s3cmd is not installed. Please see @link for details.', array('@link' => $link)), 'error');
     }
 
@@ -127,7 +146,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form['s3cmd']['path']['#attributes']['placeholder'] = $s3cmd_path_default;
     }
 
-    if (!Settings::get('s3_bucket_name') || !Settings::get('s3_access_key') || !Settings::get('s3_secret_key')) {
+    if (!$this->settings->get('s3_bucket_name') || !$this->settings->get('s3_access_key') || !$this->settings->get('s3_secret_key')) {
       $form['amazon_s3'] = array(
         '#type' => 'details',
         '#title' => t('Simple Storage Service (S3)'),
@@ -135,7 +154,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
         '#open' => TRUE,
       );
 
-      if (!Settings::get('s3_bucket_name')) {
+      if (!$this->settings->get('s3_bucket_name')) {
         $form['amazon_s3']['bucket_name'] = array(
           '#type' => 'textfield',
           '#title' => t('S3 bucket name'),
@@ -146,7 +165,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
         );
       }
 
-      if (!Settings::get('s3_access_key')) {
+      if (!$this->settings->get('s3_access_key')) {
         $form['amazon_s3']['access_key'] = array(
           '#type' => 'textfield',
           '#title' => t('Access Key'),
@@ -157,7 +176,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
         );
       }
 
-      if (!Settings::get('s3_secret_key')) {
+      if (!$this->settings->get('s3_secret_key')) {
         $form['amazon_s3']['secret_key'] = array(
           '#type' => 'textfield',
           '#title' => t('Secret Key'),
@@ -196,17 +215,17 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form_state->setErrorByName('s3cmd_path', t('The path to the s3cmd binary does not exist.'));
     }
 
-    if (!Settings::get('s3_bucket_name') &&
+    if (!$this->settings->get('s3_bucket_name') &&
         !preg_match('/^[^\.\-]?[a-zA-Z0-9\.\-]{1,63}[^\.\-]?$/', $form_state->getValue('bucket_name'))) {
       $form_state->setErrorByName('bucket_name', t('The S3 bucket name entered is not valid.'));
     }
 
-    if (!Settings::get('s3_access_key') &&
+    if (!$this->settings->get('s3_access_key') &&
         !preg_match('/^[A-Z0-9]{20}$/', $form_state->getValue('access_key'))) {
       $form_state->setErrorByName('access_key', t('The S3 access key entered is not valid.'));
     }
 
-    if (!Settings::get('s3_secret_key') &&
+    if (!$this->settings->get('s3_secret_key') &&
         !preg_match('/^[a-zA-Z0-9\+\/]{39,40}$/', $form_state->getValue('secret_key'))) {
       $form_state->setErrorByName('secret_key', t('The S3 secret key entered is not valid.'));
     }
@@ -223,25 +242,46 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config')
-      ->set('aws_region',  $form_state->getValue('aws_region'))
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'));
 
-    if (!Settings::get('s3_bucket_name')) {
+    $regions = array();
+    foreach ($form_state->getValue('aws_region') as $key => $value) {
+      if ($value) {
+        $regions[] = $value;
+      }
+    }
+    $config->set('aws_region', $regions);
+
+    if (!$this->settings->get('s3_bucket_name')) {
       $config->set('s3_bucket_name', $form_state->getValue('bucket_name'));
     }
 
-    if (!Settings::get('s3_access_key')) {
+    if (!$this->settings->get('s3_access_key')) {
       $config->set('s3_access_key', $form_state->getValue('access_key'));
     }
 
-    if (!Settings::get('s3_secret_key')) {
+    if (!$this->settings->get('s3_secret_key')) {
       $config->set('s3_secret_key', $form_state->getValue('secret_key'));
     }
 
     $config->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Synchronize files with the selected S3 buckets.
+   *
+   * {@inheritdoc}
+   */
+  public function submitSyncFiles(array &$form, FormStateInterface $form_state) {
+    if ($this->s3cmd->sync()) {
+      drupal_set_message(t('Files synchronized to S3 bucket successfully.'));
+    }
+    else {
+      drupal_set_message(t('Failed to synchronize files to S3 bucket.'), 'error');
+    }
   }
 
   /**
