@@ -9,7 +9,6 @@ namespace Drupal\amazon_s3_sync;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\StreamWrapper\PublicStream;
 
 /**
  * Defines a Amazon_S3_Sync s3cmd object.
@@ -57,7 +56,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function sync() {
+  public function sync($source, $target) {
     $config = $this->configFactory->get('amazon_s3_sync.config');
 
     $s3cmd_path = $config->get('s3cmd_path');
@@ -70,36 +69,37 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
           continue;
         }
 
-        $script_opts = array(
+        // Exclude system files.
+        $options = array(
           "--exclude 'config__*'",
           "--exclude 'php/*'"
         );
 
         foreach ($config->get('s3cmd_excludes') as $exclude) {
-          $script_opts[] = "--exclude '$exclude'";
+          $options[] = "--exclude '$exclude'";
         }
 
         if ($this->dry_run) {
-          $script_opts[] = '--dry-run';
+          $options[] = '--dry-run';
         }
 
         if ($this->verbose) {
-          $script_opts[] = '--verbose';
+          $options[] = '--verbose';
         }
 
         $access_key = $this->settings->get('s3_access_key') ? $this->settings->get('s3_access_key') : $config->get('s3_access_key');
         $secret_key = $this->settings->get('s3_secret_key') ? $this->settings->get('s3_secret_key') : $config->get('s3_secret_key');
 
-        $script_opts[] = '--access_key ' . $access_key;
-        $script_opts[] = '--secret_key ' . $secret_key;
-        $script_opts[] = '--region ' . $code;
+        $options[] = '--access_key ' . $access_key;
+        $options[] = '--secret_key ' . $secret_key;
+        $options[] = '--region ' . $code;
+        //$options[] = '--delete-removed';
+        $options[] = '--acl-public';
 
         try {
-          $command = $s3cmd_path . ' sync ' . implode(' ', $script_opts);
-          $source  = DRUPAL_ROOT . '/' . PublicStream::basePath();
-          $target  = 's3://' . $config->get('s3_bucket_name');
+          $command = $s3cmd_path . ' sync ' . implode(' ', $options);
 
-          shell_exec($command .' '. $source .' '. $target);
+          shell_exec($command . ' ' . $source . ' s3://' . $config->get('s3_bucket_name') . '/' . $target);
 
           return TRUE;
         }

@@ -18,5 +18,5 @@ interface Amazon_S3_SyncS3cmdInterface {
    * @return bool
    *   TRUE if success, FALSE if not.
    */
-  public function sync();
+  public function sync($source, $target);
 }

@@ -12,7 +12,10 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\Url;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -305,14 +308,49 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   }
 
   /**
-   * Synchronize files with the selected S3 buckets.
-   *
    * {@inheritdoc}
    */
   public function submitSyncFiles(array &$form, FormStateInterface $form_state) {
-    $this->s3cmd->verbose = TRUE;
+    $path = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/';
 
-    if ($this->s3cmd->sync()) {
+    $operations = array();
+
+    $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path), RecursiveIteratorIterator::SELF_FIRST);
+    foreach ($objects as $file => $object) {
+      $source = str_replace($path, '', $file);
+
+      if (preg_match('/^[\.]{1,2}$/', $source)) {
+        continue;
+      }
+
+      $operations[] = array(
+        '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm::submitSyncFilesBatch', array($this, $path, $source),
+      );
+    }
+
+    batch_set(array(
+      'title' => t('Synchronizing files to Amazon S3...'),
+      'operations' => $operations,
+      'finished' => array(get_class($this), 'submitSyncFilesCallback'),
+    ));
+  }
+
+  /**
+   * Batch process to synchronize files with the selected S3 buckets.
+   *
+   *
+   */
+  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $object, $source, $target, &$context) {
+    $object->s3cmd->sync($source, $target);
+  }
+
+  /**
+   * Batch process callback.
+   *
+   *
+   */
+  public static function submitSyncFilesCallback($success, $results, $operations) {
+    if ($success) {
       drupal_set_message(t('Files synchronized to S3 bucket successfully.'));
     }
     else {
