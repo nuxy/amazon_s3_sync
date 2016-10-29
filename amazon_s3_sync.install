@@ -6,34 +6,38 @@
  */
 
 function amazon_s3_sync_schema() {
-  $schema['amazon_s3_sync_files'] = array(
-    'description' => 'List of Amazon S3 synced files',
+  $schema['amazon_s3_sync_log'] = array(
+    'description' => 'Amazon S3 sync log entries',
     'fields' => array(
       'id' => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
       ),
-      'fid' => array(
+      'command' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'output' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'started' => array(
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
-      'created' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'modified' => array(
+      'ended' => array(
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
     ),
     'indexes' => array(
-      'fid' => array('fid'),
-      'created' => array('created'),
-      'modified' => array('modified'),
+      'started' => array('started'),
+      'ended' => array('ended'),
     ),
     'primary key' => array('id'),
   );

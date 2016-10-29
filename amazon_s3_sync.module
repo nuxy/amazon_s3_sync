@@ -10,14 +10,9 @@
  */
 function amazon_s3_sync_views_data() {
   $table = array(
-    'amazon_s3_sync_files' => array(
+    'amazon_s3_sync_log' => array(
       'table' => array(
-        'group' => 'Amazon S3 sync',
-        'base' => array(
-          'title' => 'Amazon S3 storage',
-          'help' => 'List of Amazon S3 synced files.',
-          'field' => 'id',
-        ),
+        'group' => 'Amazon S3 sync log',
       ),
       'id' => array(
         'title' => 'ID',
@@ -35,73 +30,62 @@ function amazon_s3_sync_views_data() {
           'id' => 'numeric',
         ),
       ),
-      'fid' => array(
-        'title' => 'User ID',
-        'help' => 'The user ID.',
-        'field' => array(
-          'id' => 'numeric',
-        ),
-        'filter' => array(
-          'id' => 'numeric',
-        ),
-        'sort' => array(
-          'id' => 'standard',
-        ),
-        'argument' => array(
-          'id' => 'numeric',
-        ),
-        'relationship' => array(
-          'base' => 'file_managed',
-          'base field' => 'fid',
-          'id' => 'standard',
-          'label' => 'file',
-        ),
-      ),
-      'created' => array(
-        'title' => 'Created',
-        'help' => 'The time that the file was synced to Amazon S3.',
-        'field' => array(
-          'id' => 'date',
-        ),
-        'filter' => array(
-          'id' => 'date',
-        ),
-        'sort' => array(
-          'id' => 'date',
-        ),
-      ),
-      'modified' => array(
-        'title' => 'Modified',
-        'help' => 'The time that the updated was synced on Amazon S3.',
-        'field' => array(
-          'id' => 'date',
-        ),
-        'filter' => array(
-          'id' => 'date',
-        ),
-        'sort' => array(
-          'id' => 'date',
-        ),
-      ),
-    ),
-    'file_managed' => array(
-      'table' => array(
-        'group' => 'file',
-      ),
-      'filename' => array(
-        'title' => 'Filename',
-        'help' => 'Appears in: file.',
+      'command' => array(
+        'title' => 'S3cmd command',
+        'help' => 'The S3cmd sync command and arguments.',
         'field' => array(
           'id' => 'standard',
         ),
         'filter' => array(
+          'id' => 'standard',
+        ),
+        'sort' => array(
           'id' => 'string',
-        ),
-        'sort' => array(
-          'id' => 'standard',
         ),
         'argument' => array(
           'id' => 'string',
+        ),
+      ),
+      'output' => array(
+        'title' => 'S3cmd command output',
+        'help' => 'The S3cmd sync command results.',
+        'field' => array(
+          'id' => 'standard',
+        ),
+        'filter' => array(
+          'id' => 'standard',
+        ),
+        'sort' => array(
+          'id' => 'string',
+        ),
+        'argument' => array(
+          'id' => 'string',
+        ),
+      ),
+      'started' => array(
+        'title' => 'Started',
+        'help' => 'Start time of Amazon S3 sync process.',
+        'field' => array(
+          'id' => 'date',
+        ),
+        'filter' => array(
+          'id' => 'date',
+        ),
+        'sort' => array(
+          'id' => 'date',
+        ),
+      ),
+      'ended' => array(
+        'title' => 'Ended',
+        'help' => 'End time of Amazon S3 sync process.',
+        'field' => array(
+          'id' => 'date',
+        ),
+        'filter' => array(
+          'id' => 'date',
+        ),
+        'sort' => array(
+          'id' => 'date',
         ),
       ),
     ),

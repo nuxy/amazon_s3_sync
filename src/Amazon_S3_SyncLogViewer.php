@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\amazon_s3_sync\Amazon_S3_SyncFileManager.
+ * Contains \Drupal\amazon_s3_sync\Amazon_S3_SyncLogViewer.
  */
 
 namespace Drupal\amazon_s3_sync;
@@ -13,17 +13,17 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 
 /**
- * Defines a Amazon_S3_Sync file manager.
+ * Defines a Amazon_S3_Sync log viewer.
  */
-class Amazon_S3_SyncFileManager implements Amazon_S3_SyncFileManagerInterface {
+class Amazon_S3_SyncLogViewer implements Amazon_S3_SyncLogViewerInterface {
   use StringTranslationTrait;
 
   /**
-   * Amazon_S3_Sync file storage.
+   * Amazon_S3_Sync log storage.
    *
-   * @var \Drupal\amazon_s3_sync\Amazon_S3_SyncFileStorageInterface
+   * @var \Drupal\amazon_s3_sync\Amazon_S3_SyncLogStorageInterface
    */
-  protected $amazon_s3_syncFileStorage;
+  protected $amazon_s3_syncLogStorage;
 
   /**
    * The string translation service.
@@ -40,10 +40,10 @@ class Amazon_S3_SyncFileManager implements Amazon_S3_SyncFileManagerInterface {
   protected $renderer;
 
   /**
-   * Constructs a Amazon_S3_SyncFileManager object.
+   * Constructs a Amazon_S3_SyncLogViewer object.
    *
-   * @param \Drupal\amazon_s3_sync\Amazon_S3_SyncFileStorageInterface $amazon_s3_sync_file_storage
-   *   The Amazon_S3_SyncFile storage.
+   * @param \Drupal\amazon_s3_sync\Amazon_S3_SyncLogStorageInterface $amazon_s3_sync_log_storage
+   *   The Amazon_S3_SyncLog storage.
    *
    * @param \Drupal\Core\StringTranslation\TranslationInterface $translation
    *   The string translation service.
@@ -51,8 +51,8 @@ class Amazon_S3_SyncFileManager implements Amazon_S3_SyncFileManagerInterface {
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    */
-  public function __construct(Amazon_S3_SyncFileStorageInterface $amazon_s3_sync_file_storage, TranslationInterface $translation, RendererInterface $renderer) {
-    $this->amazon_s3_syncFileStorage = $amazon_s3_sync_file_storage;
+  public function __construct(Amazon_S3_SyncLogStorageInterface $amazon_s3_sync_log_storage, TranslationInterface $translation, RendererInterface $renderer) {
+    $this->amazon_s3_syncLogStorage = $amazon_s3_sync_log_storage;
     $this->stringTranslation = $translation;
     $this->renderer = $renderer;
   }
