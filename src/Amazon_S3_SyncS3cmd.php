@@ -9,6 +9,7 @@ namespace Drupal\amazon_s3_sync;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Site\Settings;
+use Psr\Log\LoggerInterface;
 
 /**
  * Defines a Amazon_S3_Sync s3cmd object.
@@ -40,17 +41,26 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   protected $settings;
 
   /**
+   * A logger instance.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Constructs a Amazon_S3_SyncS3cmd object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
-   *
    * @param \Drupal\Core\Site\Settings $settings
    *   The settings instance.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings) {
+  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, LoggerInterface $logger) {
     $this->configFactory = $config_factory;
     $this->settings = $settings;
+    $this->logger = $logger;
   }
 
   /**
@@ -93,7 +103,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
         $options[] = '--access_key ' . $access_key;
         $options[] = '--secret_key ' . $secret_key;
         $options[] = '--region ' . $code;
-        //$options[] = '--delete-removed';
+        $options[] = '--delete-removed';
         $options[] = '--acl-public';
 
         try {
@@ -104,7 +114,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
           return TRUE;
         }
         catch (Exception $e) {
-          echo $e->getMessage(), "\n";
+          $this->logger->error($e->getMessage());
 
           return FALSE;
         }
