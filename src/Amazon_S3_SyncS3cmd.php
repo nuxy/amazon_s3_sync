@@ -71,11 +71,13 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
         }
 
         $script_opts = array(
-          "--exclude '.*'",
-          "--exclude 'config*/*'",
-          "--exclude 'php/*'",
-          "--exclude 'private/*'"
+          "--exclude 'config__*'",
+          "--exclude 'php/*'"
         );
+
+        foreach ($config->get('s3cmd_excludes') as $exclude) {
+          $script_opts[] = "--exclude '$exclude'";
+        }
 
         if ($this->dry_run) {
           $script_opts[] = '--dry-run';

@@ -86,7 +86,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     foreach ($config->get('aws_regions') as $code => $region) {
       $enabled = in_array($code, $config->get('aws_region') ?: array());
-
       $table_defaults[$code] = $enabled;
 
       $bucket_name = $config->get('s3_bucket_name');
@@ -145,6 +144,18 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form['s3cmd']['s3cmd_path']['#attributes']['class'][] = 'error';
       $form['s3cmd']['s3cmd_path']['#attributes']['placeholder'] = $s3cmd_path_default;
     }
+
+    $form['s3cmd']['s3cmd_excludes'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Excludes'),
+      '#description' => t('Filenames and paths matching GLOB will be excluded. <strong>Warning:</strong> Private files that exist in the <em>Public file system path</em> should be added here.'),
+      '#default_value' => $config->get('s3cmd_excludes'),
+      '#maxlength' => 255,
+      '#required' => FALSE,
+      '#attributes' => array(
+        'placeholder' => 'directory/* image.* image.jpg',
+      ),
+    );
 
     if (!$this->settings->get('s3_bucket_name') || !$this->settings->get('s3_access_key') || !$this->settings->get('s3_secret_key')) {
       $form['amazon_s3'] = array(
@@ -215,17 +226,22 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form_state->setErrorByName('s3cmd_path', t('The path to the s3cmd binary does not exist.'));
     }
 
-    if (!$this->settings->get('s3_bucket_name') &&
+    if ($form_state->getValue('s3cmd_excludes') &&
+        !preg_match('/^[\w\s-\.\/\*]*$/', $form_state->getValue('s3cmd_excludes'))) {
+      $form_state->setErrorByName('s3cmd_excludes', t('Excludes must contain a valid filename and be separated by spaces.'));
+    }
+
+    if ($this->settings->get('s3_bucket_name') &&
         !preg_match('/^[^\.\-]?[a-zA-Z0-9\.\-]{1,63}[^\.\-]?$/', $form_state->getValue('bucket_name'))) {
       $form_state->setErrorByName('bucket_name', t('The S3 bucket name entered is not valid.'));
     }
 
-    if (!$this->settings->get('s3_access_key') &&
+    if ($this->settings->get('s3_access_key') &&
         !preg_match('/^[A-Z0-9]{20}$/', $form_state->getValue('access_key'))) {
       $form_state->setErrorByName('access_key', t('The S3 access key entered is not valid.'));
     }
 
-    if (!$this->settings->get('s3_secret_key') &&
+    if ($this->settings->get('s3_secret_key') &&
         !preg_match('/^[a-zA-Z0-9\+\/]{39,40}$/', $form_state->getValue('secret_key'))) {
       $form_state->setErrorByName('secret_key', t('The S3 secret key entered is not valid.'));
     }
@@ -244,6 +260,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $config = $this->config('amazon_s3_sync.config')
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'));
+
+    $excludes = explode(' ', $form_state->getValue('s3cmd_excludes'));
+    $config->set('s3cmd_excludes', $excludes);
 
     $regions = array();
     foreach ($form_state->getValue('aws_region') as $key => $value) {
@@ -276,6 +295,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitSyncFiles(array &$form, FormStateInterface $form_state) {
+    $this->s3cmd->verbose = TRUE;
+
     if ($this->s3cmd->sync()) {
       drupal_set_message(t('Files synchronized to S3 bucket successfully.'));
     }
