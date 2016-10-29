@@ -85,7 +85,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $table_options = array();
 
     foreach ($config->get('aws_regions') as $code => $region) {
-      $enabled = in_array($code, $config->get('aws_region'));
+      $enabled = in_array($code, $config->get('aws_region') ?: array());
 
       $table_defaults[$code] = $enabled;
 

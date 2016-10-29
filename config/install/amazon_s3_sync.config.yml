@@ -36,10 +36,13 @@ aws_regions:
     name: 'South America (São Paulo)'
     endpoint: s3-sa-east-1.amazonaws.com
 
+aws_region: ~
+
 s3_bucket_name: ~
 s3_access_key: ~
 s3_secret_key: ~
 
 s3cmd_path: ~
+s3cmd_excludes: ~
 
-host_name: ~
+common_name: ~
