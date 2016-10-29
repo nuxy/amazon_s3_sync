@@ -142,8 +142,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     );
 
     if (!$s3cmd_exists) {
-      $form['s3cmd']['path']['#attributes']['class'][] = 'error';
-      $form['s3cmd']['path']['#attributes']['placeholder'] = $s3cmd_path_default;
+      $form['s3cmd']['s3cmd_path']['#attributes']['class'][] = 'error';
+      $form['s3cmd']['s3cmd_path']['#attributes']['placeholder'] = $s3cmd_path_default;
     }
 
     if (!$this->settings->get('s3_bucket_name') || !$this->settings->get('s3_access_key') || !$this->settings->get('s3_secret_key')) {
@@ -230,7 +230,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form_state->setErrorByName('secret_key', t('The S3 secret key entered is not valid.'));
     }
 
-    if (gethostbyname($form_state->getValue('common_name')) != $form_state->getValue('common_name')) {
+    if (gethostbyname($form_state->getValue('common_name')) == $form_state->getValue('common_name')) {
       $form_state->setErrorByName('common_name', t('The common name entered is not a valid CNAME record.'));
     }
 
