@@ -124,9 +124,13 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $s3cmd_exists = file_exists($config->get('s3cmd_path'));
 
     if (!$s3cmd_exists) {
-      $project_url = Url::fromUri('https://github.com/s3tools/s3cmd');
-      $link = \Drupal::l('https://github.com/s3tools/s3cmd', $project_url);
-      drupal_set_message(t('The required dependency s3cmd is not installed. Please see @link for details.', array('@link' => $link)), 'error');
+
+      // Create link to S3cmd Github project.
+      $s3cmd_url = 'https://github.com/s3tools/s3cmd';
+      $s3cmd_obj = Url::fromUri($s3cmd_url);
+      $s3cmd_link = \Drupal::l($s3cmd_url, $s3cmd_obj);
+
+      drupal_set_message(t('The required dependency s3cmd is not installed. Please see @link for details.', array('@link' => $s3cmd_link)), 'error');
     }
 
     $s3cmd_path_default = '/usr/bin/s3cmd';
@@ -158,10 +162,21 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     );
 
     if (!$this->settings->get('s3_bucket_name') || !$this->settings->get('s3_access_key') || !$this->settings->get('s3_secret_key')) {
+
+      // Create link to "AWS Security Credentials".
+      $aws_url1 = 'http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html';
+      $aws_obj1 = Url::fromUri($aws_url1);
+      $aws_link1 = \Drupal::l(t('AWS Security Credentials'), $aws_obj1);
+
+      // Create link to "Working with Amazon S3 Buckets".
+      $aws_url2 = 'http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html';
+      $aws_obj2 = Url::fromUri($aws_url2);
+      $aws_link2 = \Drupal::l('S3 Bucket', $aws_obj2);
+
       $form['amazon_s3'] = array(
         '#type' => 'details',
         '#title' => t('Simple Storage Service (S3)'),
-        '#description' => t('For the security conscience the following values can be defined in the <em>settings.php</em>'),
+        '#description' => t('Setup your @link1 and @link2 below. This can also be defined in <em>settings.php</em>', array('@link1' => $aws_link1, '@link2' => $aws_link2)),
         '#open' => TRUE,
       );
 
