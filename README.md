@@ -1,11 +1,12 @@
 # Amazon S3 sync
 
-Synchronize files for a Content Type with an Amazon S3 bucket.
+Synchronize files with an Amazon S3 bucket in across multiple regions.
 
 This module is **currently in development**.  You have been warned.
 
 ## Dependencies
 
+- [Drupal 8](https://www.drupal.org)
 - [s3cmd](https://github.com/s3tools/s3cmd)
 
 ## Configuration
