@@ -330,6 +330,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     batch_set(array(
       'title' => t('Synchronizing files to Amazon S3...'),
+      'progress_message' => t('Synchronized @current of @total files.'),
       'operations' => $operations,
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
@@ -338,7 +339,14 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   /**
    * Batch process to synchronize files with the selected S3 buckets.
    *
-   *
+   * @param \Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm $self
+   *   Reference to this class object.
+   * @param string $path
+   *   Absolute path to the local $source file.
+   * @param string $source
+   *   Filename or path to upload to the S3.
+   * @param string $context
+   *   Status information about the current batch.
    */
   public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, $source, &$context) {
     $self->s3cmd->sync($path, $source);
@@ -347,7 +355,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   /**
    * Batch process callback.
    *
-   *
+   * {@inheritdoc}
    */
   public static function submitSyncFilesCallback($success, $results, $operations) {
     if ($success) {
