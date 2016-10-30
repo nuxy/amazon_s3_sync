@@ -14,6 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\Url;
+use Psr\Log\LoggerInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,6 +32,13 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   protected $settings;
 
   /**
+   * A logger instance.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * The Amazon_S3_SyncS3cmd service.
    *
    * var \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface
@@ -44,13 +52,16 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *   The configuration factory.
    * @param \Drupal\Core\Site\Settings $settings
    *   The settings instance.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
    * @param \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface $s3cmd
    *   The Amazon_S3_SyncS3cmd service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, Amazon_S3_SyncS3cmdInterface $s3cmd) {
+  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, LoggerInterface $logger, Amazon_S3_SyncS3cmdInterface $s3cmd) {
     parent::__construct($config_factory);
 
     $this->settings = $settings;
+    $this->logger = $logger;
     $this->s3cmd = $s3cmd;
   }
 
@@ -68,6 +79,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     return new static (
       $container->get('config.factory'),
       $container->get('settings'),
+      $container->get('logger.channel.s3cmd'),
       $container->get('amazon_s3_sync.s3cmd')
     );
   }
@@ -334,6 +346,12 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       'operations' => $operations,
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
+
+    // Create link to sync log viewer.
+    $log_obj = Url::fromRoute('amazon_s3_sync.log_viewer');
+    $log_link = \Drupal::l('sync log viewer', $log_obj);
+
+    $this->logger->notice(t('Synchronization process initialized. Please see @link for details.', array('@link' => $log_link)));
   }
 
   /**
