@@ -1,0 +1,7 @@
+administer sync configuration:
+  title: 'Administer sync configuration'
+  restrict access: true
+
+access sync reports:
+  title: 'View sync reports'
+  restrict access: true
