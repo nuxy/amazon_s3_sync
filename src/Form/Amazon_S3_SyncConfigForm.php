@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Amazon_S3_Sync\Form\SettingsForm.
+ * Contains \Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm.
  */
 
 namespace Drupal\amazon_s3_sync\Form;
