@@ -88,13 +88,15 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
             '*.yml',
             'README.txt',
           ),
-          $config->get('s3cmd_excludes')
+          $config->get('s3cmd_excludes', array())
         );
 
         $options = array();
 
         foreach ($excludes as $exclude) {
-          $options[] = "--exclude '$exclude'";
+          if ($exclude) {
+            $options[] = "--exclude '$exclude'";
+          }
         }
 
         if ($this->dry_run) {
