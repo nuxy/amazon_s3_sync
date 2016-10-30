@@ -66,7 +66,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function sync($source, $target) {
+  public function sync($path, $source) {
     $config = $this->configFactory->get('amazon_s3_sync.config');
 
     $s3cmd_path = $config->get('s3cmd_path');
@@ -79,13 +79,21 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
           continue;
         }
 
-        // Exclude system files.
-        $options = array(
-          "--exclude 'config__*'",
-          "--exclude 'php/*'"
+        $excludes = array_merge(
+
+          // System files.
+          array(
+            '.htaccess',
+            '*.php',
+            '*.yml',
+            'README.txt',
+          ),
+          $config->get('s3cmd_excludes')
         );
 
-        foreach ($config->get('s3cmd_excludes') as $exclude) {
+        $options = array();
+
+        foreach ($excludes as $exclude) {
           $options[] = "--exclude '$exclude'";
         }
 
@@ -109,7 +117,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
         try {
           $command = $s3cmd_path . ' sync ' . implode(' ', $options);
 
-          shell_exec($command . ' ' . $source . ' s3://' . $config->get('s3_bucket_name') . '/' . $target);
+          shell_exec($command . ' ' . $path . $source . ' s3://' . $config->get('s3_bucket_name') . '/' . $source);
 
           return TRUE;
         }

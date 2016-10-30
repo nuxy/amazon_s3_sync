@@ -319,7 +319,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     foreach ($objects as $file => $object) {
       $source = str_replace($path, '', $file);
 
-      if (preg_match('/^[\.]{1,2}$/', $source)) {
+      if (preg_match('/[\.]{1,2}$/', $source)) {
         continue;
       }
 
@@ -340,8 +340,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *
    *
    */
-  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $object, $source, $target, &$context) {
-    $object->s3cmd->sync($source, $target);
+  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, $source, &$context) {
+    $self->s3cmd->sync($path, $source);
   }
 
   /**
