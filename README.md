@@ -1,6 +1,6 @@
 # Amazon S3 sync
 
-Synchronize files with an Amazon S3 bucket in across multiple regions.
+Synchronize files with an Amazon S3 bucket across multiple regions.
 
 This module is **currently in development**.  You have been warned.
 

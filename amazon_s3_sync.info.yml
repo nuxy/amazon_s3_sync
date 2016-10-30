@@ -1,6 +1,6 @@
 name: Amazon S3 sync
 type: module
-description: Synchronize files with an Amazon S3 bucket in across multiple regions.
+description: Synchronize files with an Amazon S3 bucket across multiple regions.
 package: Nuxy
 core: 8.x
 configure: amazon_s3_sync.config
