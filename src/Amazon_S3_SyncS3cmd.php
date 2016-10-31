@@ -74,8 +74,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     if (file_exists($s3cmd_path)) {
       $regions = $config->get('aws_regions');
       foreach ($regions as $code => $region) {
-        $enabled = in_array($code, $config->get('aws_region'));
-        if ($enabled == FALSE) {
+        if ($region['enabled'] == FALSE) {
           continue;
         }
 

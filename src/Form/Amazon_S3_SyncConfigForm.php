@@ -99,21 +99,22 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $table_defaults = array();
     $table_options = array();
 
-    foreach ($config->get('aws_regions') as $code => $region) {
-      $enabled = in_array($code, $config->get('aws_region') ?: array());
-      $table_defaults[$code] = $enabled;
+    $bucket_name = $config->get('s3_bucket_name');
 
-      $bucket_name = $config->get('s3_bucket_name');
-      $endpoint = ($bucket_name && $enabled) ? "$bucket_name.{$region['endpoint']}" : $region['endpoint'];
+    foreach ($config->get('aws_regions') as $code => $region) {
+      $endpoint = $region['endpoint'];
+      $enabled  = $region['enabled'];
+
+      $table_defaults[$code] = $enabled;
 
       $table_options[$code] = array(
         'name' => $region['name'],
         'code' => $code,
-        'endpoint' => $endpoint,
+        'endpoint' => ($bucket_name && $enabled) ? "$bucket_name.{$endpoint}" : $endpoint,
       );
     }
 
-    $form['aws_region'] = array(
+    $form['aws_regions'] = array(
       '#type' => 'tableselect',
       '#header' => $table_header,
       '#options' => $table_options,
@@ -121,7 +122,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#multiple' => TRUE,
     );
 
-    if ($config->get('aws_region') && $config->get('s3_bucket_name') && $config->get('s3cmd_path')) {
+    $s3cmd_path = $config->get('s3cmd_path');
+
+    if ($bucket_name && $s3cmd_path) {
       $form['sync_files'] = array(
         '#type' => 'submit',
         '#value' => t('Sync files'),
@@ -136,7 +139,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#open' => TRUE,
     );
 
-    $s3cmd_exists = file_exists($config->get('s3cmd_path'));
+    $s3cmd_exists = file_exists($s3cmd_path);
 
     if (!$s3cmd_exists) {
 
@@ -294,13 +297,11 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $excludes = explode(' ', $form_state->getValue('s3cmd_excludes'));
     $config->set('s3cmd_excludes', $excludes);
 
-    $regions = array();
-    foreach ($form_state->getValue('aws_region') as $key => $value) {
+    foreach ($form_state->getValue('aws_regions') as $key => $value) {
       if ($value) {
-        $regions[] = $value;
+        $config->set('aws_regions.' . $key . '.enabled', $value);
       }
     }
-    $config->set('aws_region', $regions);
 
     if (!$this->settings->get('s3_bucket_name')) {
       $config->set('s3_bucket_name', $form_state->getValue('bucket_name'));
