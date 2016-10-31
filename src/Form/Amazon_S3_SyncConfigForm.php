@@ -7,7 +7,7 @@
 
 namespace Drupal\amazon_s3_sync\Form;
 
-use Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface;
+use Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmd;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -39,13 +39,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   protected $logger;
 
   /**
-   * The Amazon_S3_SyncS3cmd service.
-   *
-   * @var \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface
-   */
-  protected $s3cmd;
-
-  /**
    * Constructs a Amazon_S3_SyncConfigForm object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -54,15 +47,12 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *   The settings instance.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
-   * @param \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface $s3cmd
-   *   The Amazon_S3_SyncS3cmd service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, LoggerInterface $logger, Amazon_S3_SyncS3cmdInterface $s3cmd) {
+  public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, LoggerInterface $logger) {
     parent::__construct($config_factory);
 
     $this->settings = $settings;
     $this->logger = $logger;
-    $this->s3cmd = $s3cmd;
   }
 
   /**
@@ -79,8 +69,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     return new static (
       $container->get('config.factory'),
       $container->get('settings'),
-      $container->get('logger.channel.s3cmd'),
-      $container->get('amazon_s3_sync.s3cmd')
+      $container->get('logger.channel.s3cmd')
     );
   }
 
@@ -370,7 +359,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *   Status information about the current batch.
    */
   public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, $source, &$context) {
-    $self->s3cmd->sync($path, $source);
+    $s3cmd = new Amazon_S3_SyncS3cmd($self->configFactory, $self->settings, $self->logger);
+    $s3cmd->sync($path, $source);
   }
 
   /**
