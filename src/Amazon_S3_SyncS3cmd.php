@@ -27,6 +27,21 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   public $verbose = FALSE;
 
   /**
+   * @var array
+   */
+  public static $excludes = array(
+    '.htaccess',
+    '*.php',
+    '*.yml',
+    'README.txt',
+  );
+
+  /**
+   * @var object
+   */
+  private $config;
+
+  /**
    * The configuration factory.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
@@ -58,7 +73,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    *   A logger instance.
    */
   public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, LoggerInterface $logger) {
-    $this->configFactory = $config_factory;
+    $this->config = $config_factory->get('amazon_s3_sync.config');
     $this->settings = $settings;
     $this->logger = $logger;
   }
@@ -67,35 +82,19 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * {@inheritdoc}
    */
   public function sync($path, $source) {
-    $config = $this->configFactory->get('amazon_s3_sync.config');
-
-    $s3cmd_path = $config->get('s3cmd_path');
+    $s3cmd_path = $this->config->get('s3cmd_path');
 
     if (file_exists($s3cmd_path)) {
-      $regions = $config->get('aws_regions');
+      $regions = $this->config->get('aws_regions');
       foreach ($regions as $code => $region) {
         if ($region['enabled'] == FALSE) {
           continue;
         }
 
-        $excludes = array_merge(
-
-          // System files.
-          array(
-            '.htaccess',
-            '*.php',
-            '*.yml',
-            'README.txt',
-          ),
-          $config->get('s3cmd_excludes', array())
-        );
-
         $options = array();
 
-        foreach ($excludes as $exclude) {
-          if ($exclude) {
-            $options[] = "--exclude '$exclude'";
-          }
+        foreach ($this->getExcludes() as $exclude) {
+          $options[] = "--exclude '$exclude'";
         }
 
         if ($this->dry_run) {
@@ -106,11 +105,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
           $options[] = '--verbose';
         }
 
-        $access_key = $this->settings->get('s3_access_key') ? $this->settings->get('s3_access_key') : $config->get('s3_access_key');
-        $secret_key = $this->settings->get('s3_secret_key') ? $this->settings->get('s3_secret_key') : $config->get('s3_secret_key');
-
-        $options[] = '--access_key ' . $access_key;
-        $options[] = '--secret_key ' . $secret_key;
+        $options[] = '--access_key ' . $this->getAccessKey();
+        $options[] = '--secret_key ' . $this->getSecretKey();
         $options[] = '--region ' . $code;
         $options[] = '--delete-removed';
         $options[] = '--acl-public';
@@ -118,7 +114,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
         try {
           $command = $s3cmd_path . ' sync ' . implode(' ', $options);
 
-          shell_exec($command . ' ' . $path . $source . ' s3://' . $config->get('s3_bucket_name') . '/' . $source);
+          shell_exec($command . ' ' . $path . $source . ' s3://' . $this->config->get('s3_bucket_name') . '/' . $source);
 
           return TRUE;
         }
@@ -129,5 +125,32 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
         }
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExcludes() {
+    $excludes = $this->config->get('s3cmd_excludes');
+    if ($excludes) {
+      return array_merge($excludes, self::$excludes);
+    }
+    else {
+      return self::$excludes;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function getAccessKey() {
+    return $this->settings->get('s3_access_key') ? $this->settings->get('s3_access_key') : $this->config->get('s3_access_key');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function getSecretKey() {
+    return $this->settings->get('s3_secret_key') ? $this->settings->get('s3_secret_key') : $this->config->get('s3_secret_key');
   }
 }
