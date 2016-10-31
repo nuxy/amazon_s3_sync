@@ -27,7 +27,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   /**
    * The settings instance.
    *
-   * var \Drupal\Core\Site\Settings
+   * @var \Drupal\Core\Site\Settings
    */
   protected $settings;
 
@@ -41,7 +41,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   /**
    * The Amazon_S3_SyncS3cmd service.
    *
-   * var \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface
+   * @var \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmdInterface
    */
   protected $s3cmd;
 
