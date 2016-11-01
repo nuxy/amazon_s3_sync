@@ -42,6 +42,16 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   private $config;
 
   /**
+   * @var array
+   */
+  private $options = array();
+
+  /**
+   * @var array
+   */
+  private $parameters = array();
+
+  /**
    * The settings instance.
    *
    * @return \Drupal\Core\Site\Settings
@@ -66,50 +76,59 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    *   A logger instance.
    */
   public function __construct(ConfigFactoryInterface $config_factory, Settings $settings, LoggerInterface $logger) {
-    $this->config = $config_factory->get('amazon_s3_sync.config');
+    $this->config   = $config_factory->get('amazon_s3_sync.config');
     $this->settings = $settings;
-    $this->logger = $logger;
+    $this->logger   = $logger;
   }
 
   /**
    * {@inheritdoc}
    */
   public function sync($path, $source) {
+    if (!$path || !$source) {
+      return FALSE;
+    }
+
+    foreach ($this->getExcludes() as $exclude) {
+      $this->addOption("--exclude '$exclude'");
+    }
+
+    $this->addOption('--delete-removed');
+    $this->addOption('--acl-public');
+
+    $this->addParameter($path . $source);
+    $this->addParameter($this->getBucket() . '/' . $source);
+
+    $this->execute('sync');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function execute($command) {
     $s3cmd_path = $this->config->get('s3cmd_path');
+    if (!file_exists($s3cmd_path)) {
+      return FALSE;
+    }
 
-    if (file_exists($s3cmd_path)) {
-      $regions = $this->config->get('aws_regions');
-      foreach ($regions as $code => $region) {
-        if ($region['enabled'] == FALSE) {
-          continue;
-        }
+    if ($this->dry_run) {
+      $this->addOption('--dry-run');
+    }
 
-        $options = array();
+    if ($this->verbose) {
+      $this->addOption('--verbose');
+    }
 
-        foreach ($this->getExcludes() as $exclude) {
-          $options[] = "--exclude '$exclude'";
-        }
+    $this->addOption('--access_key ' . $this->getAccessKey());
+    $this->addOption('--secret_key ' . $this->getSecretKey());
 
-        if ($this->dry_run) {
-          $options[] = '--dry-run';
-        }
-
-        if ($this->verbose) {
-          $options[] = '--verbose';
-        }
-
-        $options[] = '--access_key ' . $this->getAccessKey();
-        $options[] = '--secret_key ' . $this->getSecretKey();
-        $options[] = '--region ' . $code;
-        $options[] = '--delete-removed';
-        $options[] = '--acl-public';
+    $regions = $this->config->get('aws_regions');
+    foreach ($regions as $code => $region) {
+      if ($region['enabled']) {
+        $this->addOption('--region ' . $code);
 
         try {
-          $command = $s3cmd_path . ' sync ' . implode(' ', $options);
-
-          shell_exec($command . ' ' . $path . $source . ' s3://' . $this->config->get('s3_bucket_name') . '/' . $source);
-
-          return TRUE;
+          shell_exec($s3cmd_path . ' ' . $command . ' ' . $this->getOptions() . ' ' . $this->getParameters());
         }
         catch (Exception $e) {
           $this->logger->error($e->getMessage());
@@ -117,6 +136,34 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
           return FALSE;
         }
       }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addOption($value) {
+    if ($value) {
+      $this->options[] = $value;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addParameter($value) {
+    if ($value) {
+      $this->parameters[] = $value;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function getBucket() {
+    $name = $this->config->get('s3_bucket_name');
+    if ($name) {
+      return 's3://' . $name;
     }
   }
 
@@ -137,13 +184,43 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * {@inheritdoc}
    */
   private function getAccessKey() {
-    return $this->settings->get('s3_access_key') ? $this->settings->get('s3_access_key') : $this->config->get('s3_access_key');
+    return ($this->settings->get('s3_access_key'))
+      ? $this->settings->get('s3_access_key')
+      : $this->config->get('s3_access_key');
   }
 
   /**
    * {@inheritdoc}
    */
   private function getSecretKey() {
-    return $this->settings->get('s3_secret_key') ? $this->settings->get('s3_secret_key') : $this->config->get('s3_secret_key');
+    return ($this->settings->get('s3_secret_key'))
+      ? $this->settings->get('s3_secret_key')
+      : $this->config->get('s3_secret_key');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function getOptions() {
+    if ($this->options) {
+      return implode(' ', $this->options);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function getParameters() {
+    if ($this->parameters) {
+      return implode(' ', $this->parameters);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function reset() {
+    $this->parameters = array();
+    $this->options    = array();
   }
 }
