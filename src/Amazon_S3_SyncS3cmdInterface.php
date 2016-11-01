@@ -13,6 +13,14 @@ namespace Drupal\amazon_s3_sync;
 interface Amazon_S3_SyncS3cmdInterface {
 
   /**
+   * Empty the Amazon S3 bucket(s).
+   *
+   * @return bool
+   *   TRUE if success, FALSE if not.
+   */
+  public function empty();
+
+  /**
    * Synchronize Drupal files with the Amazon S3 bucket(s).
    *
    * @param string $path

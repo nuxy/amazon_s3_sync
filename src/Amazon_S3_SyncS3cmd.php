@@ -84,6 +84,18 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
+  public function empty() {
+    $this->addOption('--recursive');
+    $this->addOption('--force');
+
+    $this->addParameter($this->getBucket());
+
+    $this->execute('del');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function sync($path, $source) {
     if (!$path || !$source) {
       return FALSE;
@@ -146,6 +158,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     if ($value) {
       $this->options[] = $value;
     }
+    return $this;
   }
 
   /**
@@ -155,6 +168,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     if ($value) {
       $this->parameters[] = $value;
     }
+    return $this;
   }
 
   /**
@@ -170,7 +184,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExcludes() {
+  private function getExcludes() {
     $excludes = $this->config->get('s3cmd_excludes');
     if ($excludes) {
       return array_merge($excludes, self::$excludes);
