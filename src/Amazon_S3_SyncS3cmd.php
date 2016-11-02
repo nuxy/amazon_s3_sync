@@ -183,7 +183,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return user defined bucket in AWS required format.
+   *
+   * @return string
    */
   private function getBucket() {
     $name = $this->config->get('s3_bucket_name');
@@ -193,7 +195,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return merged exclude defaults with configuration defined values.
+   *
+   * @return array
    */
   private function getExcludes() {
     $excludes = $this->config->get('s3cmd_excludes');
@@ -206,7 +210,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return AWS access key from settings.php/configuration.
+   *
+   * @return string
    */
   private function getAccessKey() {
     return ($this->settings->get('s3_access_key'))
@@ -215,7 +221,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return AWS secret key from settings.php/configuration.
+   *
+   * @return string
    */
   private function getSecretKey() {
     return ($this->settings->get('s3_secret_key'))
@@ -224,7 +232,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return S3cmd required options as a concatenated string.
+   *
+   * @return string
    */
   private function getOptions() {
     if ($this->options) {
@@ -233,7 +243,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return S3cmd required parameters as a concatenated string.
+   *
+   * @return string
    */
   private function getParameters() {
     if ($this->parameters) {
@@ -242,7 +254,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Return S3cmd required AWS region code.
+   *
+   * @return string
    */
   private function getRegion() {
     if ($this->region) {
@@ -251,7 +265,10 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Define the S3cmd required AWS region code.
+   *
+   * @param string $code
+   *   Region code.
    */
   private function setRegion($code) {
     if ($this->region != $code) {
@@ -260,10 +277,11 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Reset the internal state of S3cmd required values.
    */
   private function reset() {
     $this->parameters = array();
     $this->options    = array();
+    $this->region     = NULL;
   }
 }
