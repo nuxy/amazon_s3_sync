@@ -151,8 +151,6 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     try {
       shell_exec($s3cmd_path .' '. $command .' '. $this->getRegion() .' '. $this->getOptions() .' '. $this->getParameters());
 
-      $this->logger->notice($s3cmd_path .' '. $command .' '. $this->getRegion() .' '. $this->getOptions() .' '. $this->getParameters());
-
       return TRUE;
     }
     catch (Exception $e) {
