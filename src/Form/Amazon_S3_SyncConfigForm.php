@@ -86,21 +86,29 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     );
 
     $table_defaults = array();
-    $table_options = array();
+    $table_options  = array();
+    $table_states   = array();
 
     $bucket_name = $config->get('s3_bucket_name');
 
     foreach ($config->get('aws_regions') as $code => $region) {
       $endpoint = $region['endpoint'];
-      $enabled  = $region['enabled'];
+      $enabled = $region['enabled'];
 
       $table_defaults[$code] = $enabled;
 
       $table_options[$code] = array(
         'name' => $region['name'],
         'code' => $code,
-        'endpoint' => ($bucket_name && $enabled) ? "$bucket_name.{$endpoint}" : $endpoint,
+        'endpoint' => $endpoint,
       );
+
+      if ($bucket_name && $enabled) {
+        $table_options[$code]['endpoint'] = $bucket_name . '.' . $endpoint;
+        $table_options[$code]['#attributes']['class'][] = 'selected';
+      }
+
+      $table_states[] = array('input[name="aws_regions[' . $code . ']"]' => array('checked' => TRUE));
     }
 
     $form['aws_regions'] = array(
@@ -118,6 +126,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
         '#type' => 'submit',
         '#value' => t('Sync files'),
         '#submit' => array('::submitSyncFiles'),
+        '#states' => array(
+          'visible' => $table_states,
+        ),
       );
     }
 
@@ -191,7 +202,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
         $form['amazon_s3']['bucket_name'] = array(
           '#type' => 'textfield',
           '#title' => t('S3 bucket name'),
-          '#description' => t('Must be a valid bucket that has <em>View Permissions</em> granted.'),
+          '#description' => t('Must be an empty bucket that has <em>View Permissions</em> granted.'),
           '#default_value' => $config->get('s3_bucket_name'),
           '#maxlength' => 63,
           '#required' => TRUE,
@@ -289,6 +300,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     }
 
     foreach ($form_state->getValue('aws_regions') as $key => $value) {
+      $config->set('aws_regions.' . $key . '.enabled', FALSE);
+
       if ($value) {
         $config->set('aws_regions.' . $key . '.enabled', $value);
       }
