@@ -52,11 +52,6 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   private $parameters = array();
 
   /**
-   * @var string
-   */
-  private $region = 'us-east-1a';
-
-  /**
    * The settings instance.
    *
    * @return \Drupal\Core\Site\Settings
@@ -90,12 +85,11 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * {@inheritdoc}
    */
   public function empty($region_code) {
-    $this->addOption('--recursive');
-    $this->addOption('--force');
+    $this->setOption('region', $region_code);
+    $this->setOption('recursive');
+    $this->setOption('force');
 
-    $this->setRegion($region_code);
-
-    $this->addParameter($this->getBucket());
+    $this->setParameter($this->getBucket());
 
     $this->execute('del');
   }
@@ -108,24 +102,25 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
       return FALSE;
     }
 
-    foreach ($this->getExcludes() as $exclude) {
-      $this->addOption("--exclude '$exclude'");
-    }
+    $this->setOption('exclude', $this->getExcludeList());
+    $this->setOption('delete-removed');
+    $this->setOption('acl-public');
 
-    $this->addOption('--delete-removed');
-    $this->addOption('--acl-public');
-
-    $this->addParameter($path . $source);
-    $this->addParameter($this->getBucket() . '/' . $source);
+    $this->setParameter($path . $source);
+    $this->setParameter($this->getBucket() . '/' . $source);
 
     $regions = $this->config->get('aws_regions');
     foreach ($regions as $code => $region) {
       if ($region['enabled']) {
-        $this->setRegion($code);
+        $this->setOption('region', $code);
 
-        $this->execute('sync');
+        if (!$this->execute('sync')) {
+          return FALSE;
+        }
       }
     }
+
+    return TRUE;
   }
 
   /**
@@ -138,18 +133,18 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     }
 
     if ($this->dry_run) {
-      $this->addOption('--dry-run');
+      $this->setOption('dry-run');
     }
 
     if ($this->verbose) {
-      $this->addOption('--verbose');
+      $this->setOption('verbose');
     }
 
-    $this->addOption('--access_key ' . $this->getAccessKey());
-    $this->addOption('--secret_key ' . $this->getSecretKey());
+    $this->setOption('access_key', $this->getAccessKey());
+    $this->setOption('secret_key', $this->getSecretKey());
 
     try {
-      shell_exec($s3cmd_path .' '. $command .' '. $this->getRegion() .' '. $this->getOptions() .' '. $this->getParameters());
+      shell_exec($s3cmd_path .' '. $command .' '. $this->getOptions() .' '. $this->getParameters());
 
       return TRUE;
     }
@@ -163,9 +158,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function addOption($value) {
-    if (!in_array($value, $this->options)) {
-      $this->options[] = $value;
+  public function setOption($key, $value = NULL) {
+    if (!empty($key)) {
+      $this->options[$key] = $value;
     }
     return $this;
   }
@@ -173,11 +168,33 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function addParameter($value) {
-    if (!in_array($value, $this->parameters)) {
+  public function setParameter($value) {
+    if (!empty($value)) {
       $this->parameters[] = $value;
     }
     return $this;
+  }
+
+  /**
+   * Convert array key-values to S3cmd --argument format.
+   *
+   * @return array
+   */
+  private function formatOptions($array) {
+    if (!empty($array)) {
+      $args = array();
+      foreach ($array as $key => $value) {
+        if (is_array($value)) {
+          foreach ($value as $val) {
+            $args[] = '--' . $key .' '. $val;
+          }
+        }
+        else {
+          $args[] = '--' . $key .' '. $value;
+        }
+      }
+      return $args;
+    }
   }
 
   /**
@@ -197,7 +214,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    *
    * @return array
    */
-  private function getExcludes() {
+  private function getExcludeList() {
     $excludes = $this->config->get('s3cmd_excludes');
     if ($excludes) {
       return array_merge($excludes, self::$excludes);
@@ -236,7 +253,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    */
   private function getOptions() {
     if ($this->options) {
-      return implode(' ', $this->options);
+      return implode(' ', $this->formatOptions($this->options));
     }
   }
 
@@ -252,34 +269,10 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   }
 
   /**
-   * Return S3cmd required AWS region code.
-   *
-   * @return string
-   */
-  private function getRegion() {
-    if ($this->region) {
-      return "--region '" . $this->region . "'";
-    }
-  }
-
-  /**
-   * Define the S3cmd required AWS region code.
-   *
-   * @param string $code
-   *   Region code.
-   */
-  private function setRegion($code) {
-    if ($this->region != $code) {
-      $this->region = $code;
-    }
-  }
-
-  /**
    * Reset the internal state of S3cmd required values.
    */
   private function reset() {
     $this->parameters = array();
     $this->options    = array();
-    $this->region     = NULL;
   }
 }
