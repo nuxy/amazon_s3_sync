@@ -32,4 +32,26 @@ interface Amazon_S3_SyncS3cmdInterface {
    *   TRUE if success, FALSE if not.
    */
   public function sync($path, $source);
+
+  /**
+   * Define a new S3cmd option argument.
+   *
+   * @param string $key
+   *   The command-line option prefix with --
+   * @param string $value
+   *   The command-line option value. May contain a single value or array of values.
+   *
+   * @return \Drupal\Amazon_S3_SyncS3cmd
+   */
+  public function setOption($key, $value = NULL);
+
+  /**
+   * Define a new S3cmd parameter argument.
+   *
+   * @param string $value
+   *   The command-line parameter value. Must be a path to a source or S3 bucket target.
+   *
+   * @return \Drupal\Amazon_S3_SyncS3cmd
+   */
+  public function setParameter($value);
 }
