@@ -258,11 +258,13 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $form['debug']['dry_run'] = array(
       '#type' => 'checkbox',
       '#title' => t('Simulate the upload operation without touching the S3 bucket.'),
+      '#default_value' => ($config->get('dry_run')) ? TRUE : FALSE,
     );
 
     $form['debug']['verbose'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable verbose output.'),
+      '#default_value' => ($config->get('verbose')) ? TRUE : FALSE,
     );
 
     return parent::buildForm($form, $form_state);
