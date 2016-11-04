@@ -5,15 +5,3 @@ amazon_s3_sync.config:
     _form: '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm'
   requirements:
     _permission: 'administer sync configuration'
-
-amazon_s3_sync.log_viewer:
-  path: 'admin/reports/amazon_s3_sync'
-  defaults:
-    _title: 'Amazon S3 sync log'
-  requirements:
-    _permission: 'access sync reports'
-
-amazon_s3_sync.log_purge:
-  path: 'admin/reports/amazon_s3_sync/purge'
-  requirements:
-    _permission: 'access sync reports'

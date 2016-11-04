@@ -373,11 +373,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
 
-    // Create link to sync log viewer.
-    $log_obj = Url::fromRoute('amazon_s3_sync.log_viewer');
-    $log_link = \Drupal::l('sync log viewer', $log_obj);
-
-    $this->logger->notice(t('Synchronization process initialized. Please see @link for details.', array('@link' => $log_link)));
+    $this->logger->notice(t('Synchronization process initialized.'));
   }
 
   /**

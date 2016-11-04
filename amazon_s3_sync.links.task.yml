@@ -1,5 +1,0 @@
-amazon_s3_sync.log_viewer:
-  title: 'Amazon S3 sync log'
-  route_name: amazon_s3_sync.log_viewer
-  base_route: entity.reports.collection
-  weight: 15
