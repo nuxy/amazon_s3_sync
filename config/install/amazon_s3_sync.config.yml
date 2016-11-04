@@ -56,3 +56,6 @@ s3cmd_path: ~
 s3cmd_excludes: ~
 
 common_name: ~
+
+dry_run: ~
+verbose: ~

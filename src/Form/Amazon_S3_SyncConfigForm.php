@@ -52,7 +52,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     parent::__construct($config_factory);
 
     $this->settings = $settings;
-    $this->logger = $logger;
+    $this->logger   = $logger;
   }
 
   /**
@@ -248,6 +248,23 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#required' => TRUE,
     );
 
+    $form['debug'] = array(
+      '#type' => 'details',
+      '#title' => t('Debugging'),
+      '#description' => NULL,
+      '#open' => TRUE,
+    );
+
+    $form['debug']['dry_run'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Simulate the upload operation without touching the S3 bucket.'),
+    );
+
+    $form['debug']['verbose'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable verbose output.'),
+    );
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -292,7 +309,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config')
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
-      ->set('common_name', $form_state->getValue('common_name'));
+      ->set('common_name', $form_state->getValue('common_name'))
+      ->set('dry_run',     $form_state->getValue('dry_run'))
+      ->set('verbose',     $form_state->getValue('verbose'));
 
     if ($form_state->getValue('s3cmd_excludes')) {
       $excludes = explode(' ', $form_state->getValue('s3cmd_excludes'));
