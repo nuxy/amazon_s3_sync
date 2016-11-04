@@ -28,15 +28,15 @@ class Amazon_S3_SyncLogStorage implements Amazon_S3_SyncLogStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function insert($command, $output, $start_time, $end_time) {
+  public function insert($operation, $output, $start_time, $end_time) {
 
     // Strip S3 account information.
-    $command = preg_replace('/--(?:access|secret)_key\s+[\w\+]+\s+/', '', $command);
+    $operation = preg_replace('/--(?:access|secret)_key\s+[\w\+]+\s+/', '', $operation);
 
     $result = $this->connection->insert('amazon_s3_sync_log')
       ->fields(
         array(
-          'command' => $command,
+          'operation' => $operation,
           'output' => $output,
           'started' => $start_time,
           'ended' => $end_time,

@@ -8,7 +8,7 @@
 namespace Drupal\amazon_s3_sync;
 
 /**
- * Provides an interface defining a Amazon_S3_Sync commands.
+ * Provides an interface defining a Amazon_S3_Sync operations.
  */
 interface Amazon_S3_SyncS3cmdInterface {
 

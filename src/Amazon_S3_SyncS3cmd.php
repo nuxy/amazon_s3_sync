@@ -27,6 +27,16 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   public $verbose = FALSE;
 
   /**
+   * @var string
+   */
+  public $operation;
+
+  /**
+   * @var string
+   */
+  public $output;
+
+  /**
    * @var array
    */
   public static $excludes = array(
@@ -144,7 +154,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setOption('secret_key', $this->getSecretKey());
 
     try {
-      shell_exec($s3cmd_path .' '. $command .' '. $this->getOptions() .' '. $this->getParameters());
+      shell_exec($s3cmd_path .' '. $this->getOptions() .' '. $command .' '. $this->getParameters());
 
       return TRUE;
     }

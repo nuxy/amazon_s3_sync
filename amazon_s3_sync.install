@@ -14,7 +14,7 @@ function amazon_s3_sync_schema() {
         'not null' => TRUE,
         'unsigned' => TRUE,
       ),
-      'command' => array(
+      'operation' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,

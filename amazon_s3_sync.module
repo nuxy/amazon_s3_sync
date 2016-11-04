@@ -30,9 +30,9 @@ function amazon_s3_sync_views_data() {
           'id' => 'numeric',
         ),
       ),
-      'command' => array(
-        'title' => 'S3cmd command',
-        'help' => 'The S3cmd sync command and arguments.',
+      'operation' => array(
+        'title' => 'S3cmd operation',
+        'help' => 'The S3cmd sync operation.',
         'field' => array(
           'id' => 'standard',
         ),
@@ -47,8 +47,8 @@ function amazon_s3_sync_views_data() {
         ),
       ),
       'output' => array(
-        'title' => 'S3cmd command output',
-        'help' => 'The S3cmd sync command results.',
+        'title' => 'S3cmd operation output',
+        'help' => 'The S3cmd sync results.',
         'field' => array(
           'id' => 'standard',
         ),
