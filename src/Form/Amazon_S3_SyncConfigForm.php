@@ -349,6 +349,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitSyncFiles(array &$form, FormStateInterface $form_state) {
+    $config = $this->config('amazon_s3_sync.config');
+
     $path = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/';
 
     $operations = array();
@@ -366,14 +368,16 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       );
     }
 
+    $message = t('Synchronizing files to Amazon S3 (@bucket_name)', array('@bucket_name' => $config->get('s3_bucket_name')));
+
     batch_set(array(
-      'title' => t('Synchronizing files to Amazon S3...'),
+      'title' => $message,
       'progress_message' => t('Synchronized @current of @total files.'),
       'operations' => $operations,
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
 
-    $this->logger->notice(t('Synchronization process initialized.'));
+    $this->logger->notice($message);
   }
 
   /**
@@ -389,7 +393,11 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *   Status information about the current batch.
    */
   public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, $source, &$context) {
+    $config = $self->config('amazon_s3_sync.config');
+
     $s3cmd = new Amazon_S3_SyncS3cmd($self->configFactory, $self->settings, $self->logger);
+    $s3cmd->dry_run = $config->get('dry_run');
+    $s3cmd->verbose = $config->get('verbose');
     $s3cmd->sync($path, $source);
   }
 
