@@ -24,6 +24,11 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * @var bool
    */
+  public $debug = FALSE;
+
+  /**
+   * @var bool
+   */
   public $verbose = FALSE;
 
   /**
@@ -136,6 +141,11 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
 
     if ($this->dry_run) {
       $this->setOption('dry-run');
+      $debug = TRUE;
+    }
+
+    if ($this->debug) {
+      $this->setOption('debug');
       $debug = TRUE;
     }
 

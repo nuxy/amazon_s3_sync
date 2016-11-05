@@ -170,12 +170,41 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $form['s3cmd']['s3cmd_excludes'] = array(
       '#type' => 'textfield',
       '#title' => t('Excludes'),
-      '#description' => t('Filenames and paths matching GLOB will be excluded. <strong>Warning:</strong> Private files that exist in the <em>Public file system path</em> should be added here.'),
+      '#description' => t('Filenames and paths matching GLOB will be excluded. <strong class="color-warning">Warning</strong> Private files that exist in the <em>Public file system path</em> should be added here.'),
       '#default_value' => $config->get('s3cmd_excludes'),
       '#maxlength' => 255,
       '#required' => FALSE,
       '#attributes' => array(
         'placeholder' => 'directory/* image.* image.jpg',
+      ),
+    );
+
+    $form['s3cmd']['options'] = array(
+      '#type' => 'container',
+      '#prefix' => '<strong>' . t('Script options') . '</strong>',
+    );
+
+    $form['s3cmd']['options']['dry_run'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Simulate the upload operation without touching the S3 bucket.'),
+      '#default_value' => ($config->get('dry_run')) ? TRUE : FALSE,
+    );
+
+    $form['s3cmd']['options']['debug'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable debug output. <strong class="color-warning">Warning</strong> AWS Security Credentials will be exposed in the log output.</strong>'),
+      '#default_value' => ($config->get('debug')) ? TRUE : FALSE,
+      '#states' => array(
+        'disabled' => array('input[name="verbose"]' => array('checked' => TRUE)),
+      ),
+    );
+
+    $form['s3cmd']['options']['verbose'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable verbose output.'),
+      '#default_value' => ($config->get('verbose')) ? TRUE : FALSE,
+      '#states' => array(
+        'disabled' => array('input[name="debug"]' => array('checked' => TRUE)),
       ),
     );
 
@@ -248,25 +277,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#required' => TRUE,
     );
 
-    $form['debug'] = array(
-      '#type' => 'details',
-      '#title' => t('Debugging'),
-      '#description' => NULL,
-      '#open' => TRUE,
-    );
-
-    $form['debug']['dry_run'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Simulate the upload operation without touching the S3 bucket.'),
-      '#default_value' => ($config->get('dry_run')) ? TRUE : FALSE,
-    );
-
-    $form['debug']['verbose'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable verbose output.'),
-      '#default_value' => ($config->get('verbose')) ? TRUE : FALSE,
-    );
-
     return parent::buildForm($form, $form_state);
   }
 
@@ -313,6 +323,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'))
       ->set('dry_run',     $form_state->getValue('dry_run'))
+      ->set('debug',       $form_state->getValue('debug'))
       ->set('verbose',     $form_state->getValue('verbose'));
 
     if ($form_state->getValue('s3cmd_excludes')) {
@@ -395,8 +406,10 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, $source, &$context) {
     $config = $self->config('amazon_s3_sync.config');
 
+    // Sync each file using the S3cmd client.
     $s3cmd = new Amazon_S3_SyncS3cmd($self->configFactory, $self->settings, $self->logger);
     $s3cmd->dry_run = $config->get('dry_run');
+    $s3cmd->debug   = $config->get('debug');
     $s3cmd->verbose = $config->get('verbose');
     $s3cmd->sync($path, $source);
   }
