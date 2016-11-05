@@ -27,16 +27,6 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   public $verbose = FALSE;
 
   /**
-   * @var string
-   */
-  public $operation;
-
-  /**
-   * @var string
-   */
-  public $output;
-
-  /**
    * @var array
    */
   public static $excludes = array(
@@ -142,19 +132,32 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
       return FALSE;
     }
 
+    $debug = FALSE;
+
     if ($this->dry_run) {
       $this->setOption('dry-run');
+      $debug = TRUE;
     }
 
     if ($this->verbose) {
       $this->setOption('verbose');
+      $debug = TRUE;
     }
 
     $this->setOption('access_key', $this->getAccessKey());
     $this->setOption('secret_key', $this->getSecretKey());
 
     try {
-      shell_exec($s3cmd_path .' '. $this->getOptions() .' '. $command .' '. $this->getParameters());
+      exec($s3cmd_path .' '. $this->getOptions() .' '. $command .' '. $this->getParameters() . ' 2>&1', $output);
+
+      if (!empty($output)) {
+        if ($debug) {
+          $this->logger->debug(implode('<br>', $output));
+        }
+        else {
+          $this->logger->notice($output);
+        }
+      }
 
       return TRUE;
     }
@@ -190,18 +193,24 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    *
    * @return array
    */
-  private function formatOptions($array) {
+  private function formatOptions($array, &$args = array(), $name = NULL) {
     if (!empty($array)) {
-      $args = array();
       foreach ($array as $key => $value) {
+        $key = $name ?: $key;
+
+        // Process values with duplicate keys.
         if (is_array($value)) {
-          foreach ($value as $val) {
-            $args[] = '--' . $key .' '. $val;
-          }
+          $this->formatOptions($value, $args, $key);
+
+          continue;
         }
-        else {
-          $args[] = '--' . $key .' '. $value;
+
+        // Escape wildcard values.
+        if ($value && preg_match('/\*/', $value)) {
+          $value = escapeshellarg($value);
         }
+
+        $args[] = trim('--' . $key .' '. $value);
       }
       return $args;
     }
