@@ -201,6 +201,13 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * Convert array key-values to S3cmd --argument format.
    *
+   * @param array $array
+   *   Associative array of options.
+   * @param array &$args
+   *   Reference to formOptions arguments (optional).
+   * @param string $name
+   *   Option name (optional).
+   *
    * @return array
    */
   private function formatOptions($array, &$args = array(), $name = NULL) {
