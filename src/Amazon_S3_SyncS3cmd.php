@@ -161,11 +161,13 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
       exec($s3cmd_path .' '. $this->getOptions() .' '. $command .' '. $this->getParameters() . ' 2>&1', $output);
 
       if (!empty($output)) {
+        $message = implode('<br>', $output);
+
         if ($debug) {
-          $this->logger->debug(implode('<br>', $output));
+          $this->logger->debug($message);
         }
         else {
-          $this->logger->notice($output);
+          $this->logger->notice($message);
         }
       }
 
