@@ -332,9 +332,24 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     }
 
     foreach ($form_state->getValue('aws_regions') as $key => $value) {
-      $config->set('aws_regions.' . $key . '.enabled', FALSE);
 
-      if ($value) {
+      // Empty bucket contents for unselected regions..
+      if (isset($form['aws_regions']['#options'][$key]['#attributes']) && !$value) {
+
+        // .. using the S3cmd client.
+        $s3cmd = new Amazon_S3_SyncS3cmd($this->configFactory, $this->settings, $this->logger);
+        $s3cmd->dry_run = $config->get('dry_run');
+        $s3cmd->debug   = $config->get('debug');
+        $s3cmd->verbose = $config->get('verbose');
+        $s3cmd->empty($key);
+
+        $message = t('Deleting contents of Amazon S3 bucket (@bucket_name) in region (@region)', array('@bucket_name' => $config->get('s3_bucket_name'), '@region' => $key));
+
+        $this->logger->notice($message);
+
+        $config->set('aws_regions.' . $key . '.enabled', FALSE);
+      }
+      else {
         $config->set('aws_regions.' . $key . '.enabled', $value);
       }
     }
@@ -379,11 +394,11 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       );
     }
 
-    $message = t('Synchronizing files to Amazon S3 (@bucket_name)', array('@bucket_name' => $config->get('s3_bucket_name')));
+    $message = t('Updating Amazon S3 buckets (@bucket_name)', array('@bucket_name' => $config->get('s3_bucket_name')));
 
     batch_set(array(
       'title' => $message,
-      'progress_message' => t('Synchronized @current of @total files.'),
+      'progress_message' => t('Processed @current of @total files.'),
       'operations' => $operations,
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
