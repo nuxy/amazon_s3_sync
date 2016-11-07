@@ -387,7 +387,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     batch_set(array(
       'title' => t('Amazon S3 sync'),
       'init_message' => $message,
-      'progress_message' => t('Sync in progress'),
+      'progress_message' => t('Processing..'),
       'operations' => $operations,
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
