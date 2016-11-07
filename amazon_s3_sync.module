@@ -5,6 +5,8 @@
  * Synchronize files with an Amazon S3 bucket across multiple regions.
  */
 
+use Drupal\Core\StreamWrapper\PublicStream;
+
 /**
  * Implements hook_file_url_alter().
  */
@@ -21,8 +23,46 @@ function amazon_s3_sync_file_url_alter(&$uri) {
           return;
         }
       }
-
-      $uri = 'http://cdn.bzzy.com/' . $path;
     }
   }
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function amazon_s3_sync_node_delete(Drupal\node\Entity\Node $node) {
+  #amazon_s3_sync_files($node);
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function amazon_s3_sync_node_insert(Drupal\node\Entity\Node $node) {
+  #amazon_s3_sync_files($node);
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function amazon_s3_sync_node_update(Drupal\node\Entity\Node $node) {
+  #amazon_s3_sync_files($node);
+}
+
+/**
+ * Synchronize files for a given node with the Amazon S3 bucket(s).
+ *
+ * @param string $node
+ *   \Drupal\node\Entity\Node
+ */
+function amazon_s3_sync_files(Drupal\node\Entity\Node $node) {
+  $config = \Drupal::Config('amazon_s3_sync.config');
+
+  $img_urls = array();
+  foreach ($node->field_image as $item) {
+    if ($item->entity) {
+      $img_urls[] = $item->entity->url();
+    }
+  }
+
+  dsm($img_urls);
 }
