@@ -112,6 +112,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setOption('exclude', $this->getExcludeList());
     $this->setOption('delete-removed');
     $this->setOption('acl-public');
+    $this->setOption('no-mime-magic');
+    $this->setOption('stop-on-error');
+    $this->setOption('stats');
 
     $this->setParameter($path . $source);
     $this->setParameter($this->getBucket() . '/' . $source);
