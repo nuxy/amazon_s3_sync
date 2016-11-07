@@ -39,6 +39,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     '*.php',
     '*.yml',
     'README.txt',
+    'config__*',
+    'private',
   );
 
   /**
@@ -102,8 +104,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function sync($path, $source) {
-    if (!$path || !$source) {
+  public function sync($path, $source = NULL) {
+    if (!$path) {
       return FALSE;
     }
 

@@ -26,12 +26,12 @@ interface Amazon_S3_SyncS3cmdInterface {
    * @param string $path
    *   Absolute path to the local $source file.
    * @param string $source
-   *   Filename or path to upload to the S3.
+   *   Filename or path to upload to the S3 (optional).
    *
    * @return bool
    *   TRUE if success, FALSE if not.
    */
-  public function sync($path, $source);
+  public function sync($path, $source = NULL);
 
   /**
    * Define a new S3cmd option argument.
