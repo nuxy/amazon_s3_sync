@@ -378,26 +378,16 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $path = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/';
 
-    $operations = array();
+    $operations[] = array(
+      '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm::submitSyncFilesBatch', array($this, $path),
+    );
 
-    $objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path), RecursiveIteratorIterator::SELF_FIRST);
-    foreach ($objects as $file => $object) {
-      $source = str_replace($path, '', $file);
-
-      if (preg_match('/[\.]{1,2}$/', $source)) {
-        continue;
-      }
-
-      $operations[] = array(
-        '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm::submitSyncFilesBatch', array($this, $path, $source),
-      );
-    }
-
-    $message = t('Updating Amazon S3 bucket (@bucket_name) selected regions', array('@bucket_name' => $config->get('s3_bucket_name')));
+    $message = t('Updating Amazon S3 bucket (@bucket_name) selected regions.', array('@bucket_name' => $config->get('s3_bucket_name')));
 
     batch_set(array(
-      'title' => $message,
-      'progress_message' => t('Processed @current of @total files.'),
+      'title' => t('Amazon S3 sync'),
+      'init_message' => $message,
+      'progress_message' => t('Sync in progress'),
       'operations' => $operations,
       'finished' => array(get_class($this), 'submitSyncFilesCallback'),
     ));
@@ -412,12 +402,10 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *   Reference to this class object.
    * @param string $path
    *   Absolute path to the local $source file.
-   * @param string $source
-   *   Filename or path to upload to the S3.
    * @param string $context
    *   Status information about the current batch.
    */
-  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, $source, &$context) {
+  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, &$context) {
     $config = $self->config('amazon_s3_sync.config');
 
     // Sync each file using the S3cmd client.
@@ -425,7 +413,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $s3cmd->dry_run = $config->get('dry_run');
     $s3cmd->debug   = $config->get('debug');
     $s3cmd->verbose = $config->get('verbose');
-    $s3cmd->sync($path, $source);
+    $s3cmd->sync($path);
   }
 
   /**
@@ -435,7 +423,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    */
   public static function submitSyncFilesCallback($success, $results, $operations) {
     if ($success) {
-      drupal_set_message(t('Files synchronized to S3 bucket successfully.'));
+      drupal_set_message(t('Files synchronized successfully.'));
     }
     else {
       drupal_set_message(t('Failed to synchronize files to S3 bucket.'), 'error');
