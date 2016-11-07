@@ -56,6 +56,7 @@ s3cmd_path: ~
 s3cmd_excludes: ~
 
 common_name: ~
+rewrite_url: ~
 
 dry_run: ~
 verbose: ~

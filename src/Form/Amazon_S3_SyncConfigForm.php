@@ -170,7 +170,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $form['s3cmd']['s3cmd_excludes'] = array(
       '#type' => 'textfield',
       '#title' => t('Excludes'),
-      '#description' => t('Filenames and paths matching GLOB will be excluded. <strong class="color-warning">Warning</strong> Private files that exist in the <em>Public file system path</em> should be added here.'),
+      '#description' => t('Filenames and paths matching GLOB will be excluded. <strong class="color-warning">Warning:</strong> Private files that exist in the <em>Public file system path</em> should be added here.'),
       '#default_value' => $config->get('s3cmd_excludes'),
       '#maxlength' => 255,
       '#required' => FALSE,
@@ -192,7 +192,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $form['s3cmd']['options']['debug'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Enable debug output. <strong class="color-warning">Warning</strong> AWS Security Credentials will be exposed in the log output.</strong>'),
+      '#title' => t('Enable debug output. <strong class="color-warning">Warning:</strong> AWS Security Credentials will be exposed in the log output.</strong>'),
       '#default_value' => ($config->get('debug')) ? TRUE : FALSE,
       '#states' => array(
         'disabled' => array('input[name="verbose"]' => array('checked' => TRUE)),
@@ -277,6 +277,17 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#required' => TRUE,
     );
 
+    $form['virtual_hosting']['options'] = array(
+      '#type' => 'container',
+      '#prefix' => '<strong>' . t('Website options') . '</strong>',
+    );
+
+    $form['virtual_hosting']['options']['rewrite_url'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Rewrite URLs for <em>public://</em> files to the Common name above. <strong class="color-warning">Warning:</strong> S3cmd excludes will be ignored.'),
+      '#default_value' => ($config->get('rewrite_url')) ? TRUE : FALSE,
+    );
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -322,6 +333,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $config = $this->config('amazon_s3_sync.config')
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'))
+      ->set('rewrite_url', $form_state->getValue('rewrite_url'))
       ->set('dry_run',     $form_state->getValue('dry_run'))
       ->set('debug',       $form_state->getValue('debug'))
       ->set('verbose',     $form_state->getValue('verbose'));

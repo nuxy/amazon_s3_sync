@@ -5,3 +5,24 @@
  * Synchronize files with an Amazon S3 bucket across multiple regions.
  */
 
+/**
+ * Implements hook_file_url_alter().
+ */
+function amazon_s3_sync_file_url_alter(&$uri) {
+  if (preg_match('/^public:\/\/(.*)$/', $uri, $matches)) {
+    $path = $matches[1];
+
+    $config = \Drupal::Config('amazon_s3_sync.config');
+
+    if ($config->get('rewrite_url')) {
+      $excludes = $config->get('s3cmd_excludes');
+      foreach ($excludes as $value) {
+        if (fnmatch($value, $path)) {
+          return;
+        }
+      }
+
+      $uri = 'http://cdn.bzzy.com/' . $path;
+    }
+  }
+}
