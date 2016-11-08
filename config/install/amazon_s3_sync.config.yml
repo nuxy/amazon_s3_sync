@@ -5,7 +5,7 @@ aws_regions:
     enabled: false
   us-east-2:
     name: 'US East (Ohio)'
-    endpoint: s3.us-east-2.amazonaws.com
+    endpoint: s3-us-east-2.amazonaws.com
     enabled: false
   us-west-1:
     name: 'US West (N. California)'
@@ -17,15 +17,15 @@ aws_regions:
     enabled: false
   ap-south-1:
     name: 'Asia Pacific (Mumbai)'
-    endpoint: s3.ap-south-1.amazonaws.com
+    endpoint: s3-ap-south-1.amazonaws.com
     enabled: false
   ap-northeast-1:
     name: 'Asia Pacific (Tokyo)'
-    endpoint: s3.ap-northeast-1.amazonaws.com
+    endpoint: s3-ap-northeast-1.amazonaws.com
     enabled: false
   ap-northeast-2:
     name: 'Asia Pacific (Seoul)'
-    endpoint: s3.ap-northeast-2.amazonaws.com
+    endpoint: s3-ap-northeast-2.amazonaws.com
     enabled: false
   ap-southeast-1:
     name: 'Asia Pacific (Singapore)'
@@ -37,7 +37,7 @@ aws_regions:
     enabled: false
   eu-central-1:
     name: 'EU (Frankfurt)'
-    endpoint: s3.eu-central-1.amazonaws.com
+    endpoint: s3-eu-central-1.amazonaws.com
     enabled: false
   eu-west1:
     name: 'EU (Ireland)'
