@@ -23,6 +23,10 @@ function amazon_s3_sync_file_url_alter(&$uri) {
           return;
         }
       }
+
+      $protocol = ($config->get('enable_ssl')) ? 'https' : 'http';
+
+      $uri = $protocol . '://' . $config->get('common_name') . '/' . $path;
     }
   }
 }
@@ -65,4 +69,15 @@ function amazon_s3_sync_files(Drupal\node\Entity\Node $node) {
   }
 
   dsm($img_urls);
+
+  if (!$path) {
+    $path = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/';
+  }
+
+  // Sync each file using the S3cmd client.
+  $s3cmd = \Drupal::service('amazon_s3_sync.s3cmd');
+  $s3cmd->dry_run = $config->get('dry_run');
+  $s3cmd->debug   = $config->get('debug');
+  $s3cmd->verbose = $config->get('verbose');
+  $s3cmd->sync($path, $source);
 }

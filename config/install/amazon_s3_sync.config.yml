@@ -57,6 +57,7 @@ s3cmd_excludes: ~
 
 common_name: ~
 rewrite_url: ~
+enable_ssl: ~
 
 dry_run: ~
 verbose: ~

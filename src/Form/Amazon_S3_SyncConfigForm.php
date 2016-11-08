@@ -286,7 +286,19 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Rewrite URLs for <em>public://</em> files to the Common name above. <strong class="color-warning">Warning:</strong> S3cmd excludes will be ignored.'),
       '#default_value' => ($config->get('rewrite_url')) ? TRUE : FALSE,
+      '#states' => array(
+        'disabled' => array('input[name="common_name"]' => array('filled' => FALSE)),
+      ),
     );
+
+    /*$form['virtual_hosting']['options']['enable_ssl'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable SSL on public file requests'),
+      '#default_value' => ($config->get('enable_ssl')) ? TRUE : FALSE,
+      '#states' => array(
+        'disabled' => array('input[name="rewrite_url"]' => array('checked' => FALSE)),
+      ),
+    );*/
 
     return parent::buildForm($form, $form_state);
   }
@@ -334,6 +346,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'))
       ->set('rewrite_url', $form_state->getValue('rewrite_url'))
+      ->set('enable_ssl',  $form_state->getValue('enable_ssl'))
       ->set('dry_run',     $form_state->getValue('dry_run'))
       ->set('debug',       $form_state->getValue('debug'))
       ->set('verbose',     $form_state->getValue('verbose'));
