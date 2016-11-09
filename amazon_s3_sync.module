@@ -26,7 +26,7 @@ function amazon_s3_sync_file_url_alter(&$uri) {
 
       $protocol = ($config->get('enable_ssl')) ? 'https' : 'http';
 
-      $uri = $protocol . '://' . $config->get('common_name') . '/' . $path;
+      $uri = $protocol . '://' . $config->get('endpoint') . '/' . $path;
     }
   }
 }

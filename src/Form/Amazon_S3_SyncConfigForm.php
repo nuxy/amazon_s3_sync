@@ -91,9 +91,10 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $bucket_name = $config->get('s3_bucket_name');
 
-    foreach ($config->get('aws_regions') as $code => $region) {
+    $regions = $config->get('aws_regions');
+    foreach ($regions as $code => $region) {
       $endpoint = $region['endpoint'];
-      $enabled = $region['enabled'];
+      $enabled  = $region['enabled'];
 
       $table_defaults[$code] = $enabled;
 
@@ -116,6 +117,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#header' => $table_header,
       '#options' => $table_options,
       '#default_value' => $table_defaults,
+      '#empty' => t('No availability zones available.'),
       '#multiple' => TRUE,
     );
 
@@ -263,7 +265,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $form['virtual_hosting'] = array(
       '#type' => 'details',
-      '#title' => t('Virtual Hosting Buckets'),
+      '#title' => t('Virtual Hosting'),
       '#description' => t('If your bucket name and domain name are <em>files.drupal.com</em>, the CNAME record should alias <em>files.drupal.com.s3.amazonaws.com</em>'),
       '#open' => TRUE,
     );
@@ -271,10 +273,37 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $form['virtual_hosting']['common_name'] = array(
       '#type' => 'textfield',
       '#title' => t('Common name'),
-      '#description' => t('Must be a fully qualified host name.'),
+      '#description' => t('Must be a fully qualified domain name.'),
       '#default_value' => $config->get('common_name'),
       '#maxlength' => 255,
       '#required' => TRUE,
+    );
+
+    $form['virtual_hosting']['endpoint'] = array(
+      '#type' => 'select',
+      '#title' => t('Endpoint'),
+      '#description' => t('Must reference a region that is currently enabled.'),
+      '#options' => array_column($table_options, 'endpoint', 'endpoint'),
+      '#states' => array(
+        'visible' => $table_states,
+      ),
+    );
+
+    $form['virtual_hosting']['options'] = array(
+      '#type' => 'container',
+      '#prefix' => '<strong>' . t('Website options') . '</strong>',
+      '#states' => array(
+        'hidden' => array('input[name="endpoint"]' => array('filled' => FALSE)),
+      ),
+    );
+
+    $form['virtual_hosting']['options']['rewrite_url'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Rewrite URLs for <em>public://</em> files to the Common name above. <strong class="color-warning">Warning:</strong> S3cmd excludes will be ignored.'),
+      '#default_value' => ($config->get('rewrite_url')) ? TRUE : FALSE,
+      '#states' => array(
+        'disabled' => array('input[name="common_name"]' => array('filled' => FALSE)),
+      ),
     );
 
     $form['virtual_hosting']['options'] = array(
@@ -331,8 +360,15 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form_state->setErrorByName('secret_key', t('The S3 secret key entered is not valid.'));
     }
 
-    if (gethostbyname($form_state->getValue('common_name')) == $form_state->getValue('common_name')) {
+    $common_name = $form_state->getValue('common_name');
+
+    if (gethostbyname($common_name) == $common_name) {
       $form_state->setErrorByName('common_name', t('The common name entered is not a valid CNAME record.'));
+    }
+
+    if (!empty($form_state->getValue('endpoint')) &&
+        !preg_match('/^' . $common_name . '/', $form_state->getValue('endpoint'))) {
+      $form_state->setErrorByName('endpoint', t('The selected endpoint is currently disabled.'));
     }
 
     drupal_get_messages('error');
@@ -345,6 +381,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $config = $this->config('amazon_s3_sync.config')
       ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'))
+      ->set('endpoint',    $form_state->getValue('endpoint'))
       ->set('rewrite_url', $form_state->getValue('rewrite_url'))
       ->set('enable_ssl',  $form_state->getValue('enable_ssl'))
       ->set('dry_run',     $form_state->getValue('dry_run'))
