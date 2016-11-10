@@ -89,8 +89,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $bucket_name = $config->get('s3_bucket_name');
 
-    $regions = $config->get('aws_regions');
-    foreach ($regions as $code => $region) {
+    foreach ($config->get('aws_regions') as $code => $region) {
       $endpoint = $region['endpoint'];
       $enabled  = $region['enabled'];
 
