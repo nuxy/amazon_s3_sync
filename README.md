@@ -13,7 +13,7 @@ This module is **currently in development**.  You have been warned.
 ## Dependencies
 
 - [Drupal 8](https://www.drupal.org)
-- [s3cmd](https://github.com/s3tools/s3cmd)
+- [s3cmd 1.6](https://github.com/s3tools/s3cmd)
 
 ## Installation
 
@@ -21,6 +21,8 @@ This module is **currently in development**.  You have been warned.
 - Extract the contents of the _.zip_ into: `<drupal root>/modules/`
 
 ## Configuration
+
+Once the module has been installed/enabled, you can navigate to `admin/config/media/amazon_s3_sync` **(Configuration > Media > Amazon S3 sync in the Admin panel)** to set-up the `s3cmd` sync options and AWS account settings.
 
 [<img src="https://raw.githubusercontent.com/nuxy/amazon_s3_sync/master/screenshot.png" alt="Amazon S3 sync" />](https://nuxy.github.io/amazon_s3_sync)
 
