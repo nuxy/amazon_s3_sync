@@ -5,8 +5,6 @@
  * Synchronize files with an Amazon S3 bucket across multiple regions.
  */
 
-use Drupal\Core\StreamWrapper\PublicStream;
-
 /**
  * Implements hook_file_url_alter().
  */
@@ -32,52 +30,45 @@ function amazon_s3_sync_file_url_alter(&$uri) {
 }
 
 /**
- * Implements hook_node_delete().
+ * Implements hook_file_delete().
  */
-function amazon_s3_sync_node_delete(Drupal\node\Entity\Node $node) {
-  #amazon_s3_sync_files($node);
+function amazon_s3_sync_file_delete(Drupal\Core\Entity\EntityInterface $entity) {
+  amazon_s3_sync_file($entity->getFileUri());
 }
 
 /**
- * Implements hook_node_insert().
+ * Implements hook_file_insert().
  */
-function amazon_s3_sync_node_insert(Drupal\node\Entity\Node $node) {
-  #amazon_s3_sync_files($node);
+function amazon_s3_sync_file_insert(Drupal\Core\Entity\EntityInterface $entity) {
+  amazon_s3_sync_file($entity->getFileUri());
 }
 
 /**
- * Implements hook_node_update().
+ * Implements hook_file_update().
  */
-function amazon_s3_sync_node_update(Drupal\node\Entity\Node $node) {
-  #amazon_s3_sync_files($node);
+function amazon_s3_sync_file_update(Drupal\Core\Entity\EntityInterface $entity) {
+  amazon_s3_sync_file($entity->getFileUri());
 }
 
 /**
- * Synchronize files for a given node with the Amazon S3 bucket(s).
+ * Synchronize file updates with the Amazon S3 bucket(s).
  *
- * @param string $node
- *   \Drupal\node\Entity\Node
+ * @param string $uri
+ *   Drupal public: file path.
  */
-function amazon_s3_sync_files(Drupal\node\Entity\Node $node) {
+function amazon_s3_sync_file($uri) {
   $config = \Drupal::Config('amazon_s3_sync.config');
 
-  $img_urls = array();
-  foreach ($node->field_image as $item) {
-    if ($item->entity) {
-      $img_urls[] = $item->entity->url();
-    }
+  $source = \Drupal::service('file_system')->realpath($uri);
+
+  if (file_exists($source)) {
+    $target = file_uri_target($uri);
+
+    // Sync the file using the S3cmd client.
+    $s3cmd = \Drupal::service('amazon_s3_sync.s3cmd');
+    $s3cmd->dry_run = $config->get('dry_run');
+    $s3cmd->debug   = $config->get('debug');
+    $s3cmd->verbose = $config->get('verbose');
+    $s3cmd->sync($source, $target);
   }
-
-  dsm($img_urls);
-
-  if (!$path) {
-    $path = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/';
-  }
-
-  // Sync each file using the S3cmd client.
-  $s3cmd = \Drupal::service('amazon_s3_sync.s3cmd');
-  $s3cmd->dry_run = $config->get('dry_run');
-  $s3cmd->debug   = $config->get('debug');
-  $s3cmd->verbose = $config->get('verbose');
-  $s3cmd->sync($path, $source);
 }
