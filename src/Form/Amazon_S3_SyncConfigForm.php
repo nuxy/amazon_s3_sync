@@ -282,7 +282,11 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#description' => t('Must reference a region that is currently enabled.'),
       '#options' => array_column($table_options, 'endpoint', 'endpoint'),
       '#states' => array(
-        'visible' => $table_states,
+        'visible' => array(
+          array($table_states),
+          'or',
+          array('input[name="rewrite_url"]' => array('checked' => TRUE)),
+        ),
       ),
     );
 
