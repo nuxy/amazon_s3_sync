@@ -459,12 +459,12 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    *
    * @param \Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm $self
    *   Reference to this class object.
-   * @param string $path
-   *   Absolute path to the local $source file.
+   * @param string $source
+   *   Absolute path to the file or directory.
    * @param string $context
    *   Status information about the current batch.
    */
-  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $path, &$context) {
+  public static function submitSyncFilesBatch(Amazon_S3_SyncConfigForm $self, $source, &$context) {
     $config = $self->config('amazon_s3_sync.config');
 
     // Sync each file using the S3cmd client.
@@ -472,7 +472,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $s3cmd->dry_run = $config->get('dry_run');
     $s3cmd->debug   = $config->get('debug');
     $s3cmd->verbose = $config->get('verbose');
-    $s3cmd->sync($path);
+    $s3cmd->sync($source);
   }
 
   /**

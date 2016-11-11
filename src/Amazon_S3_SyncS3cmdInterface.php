@@ -23,15 +23,15 @@ interface Amazon_S3_SyncS3cmdInterface {
   /**
    * Synchronize Drupal files with the Amazon S3 bucket(s).
    *
-   * @param string $path
-   *   Absolute path to the local $source file.
    * @param string $source
-   *   Filename or path to upload to the S3 (optional).
+   *   Absolute path to the local file or directory.
+   * @param string $target
+   *   Relative path to $source to upload to the S3 (optional).
    *
    * @return bool
    *   TRUE if success, FALSE if not.
    */
-  public function sync($path, $source = NULL);
+  public function sync($source, $target = NULL);
 
   /**
    * Define a new S3cmd option argument.

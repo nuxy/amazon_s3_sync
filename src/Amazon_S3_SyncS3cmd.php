@@ -104,8 +104,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
-  public function sync($path, $source = NULL) {
-    if (!$path) {
+  public function sync($source, $target = NULL) {
+    if (!$source) {
       return FALSE;
     }
 
@@ -116,8 +116,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setOption('stop-on-error');
     $this->setOption('stats');
 
-    $this->setParameter($path . $source);
-    $this->setParameter($this->getBucket() . '/' . $source);
+    $this->setParameter($source);
+    $this->setParameter($this->getBucket() . '/' . $target);
 
     $regions = $this->config->get('aws_regions');
     foreach ($regions as $code => $region) {
