@@ -18,6 +18,7 @@ interface Amazon_S3_SyncS3cmdInterface {
    * @return bool
    *   TRUE if success, FALSE if not.
    */
+  // @codingStandardsIgnoreLine
   public function empty($region_code);
 
   /**

@@ -61,7 +61,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * The settings instance.
    *
-   * @return \Drupal\Core\Site\Settings
+   * @var \Drupal\Core\Site\Settings
    */
   protected $settings;
 
@@ -91,6 +91,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * {@inheritdoc}
    */
+  // @codingStandardsIgnoreLine
   public function empty($region_code) {
     $this->setOption('region', $region_code);
     $this->setOption('recursive');
