@@ -280,6 +280,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#type' => 'select',
       '#title' => t('Endpoint'),
       '#description' => t('Must reference a region that is currently enabled.'),
+      '#default_value' => $config->get('endpoint'),
       '#options' => array_column($table_options, 'endpoint', 'endpoint'),
       '#states' => array(
         'visible' => array(
