@@ -116,6 +116,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setOption('no-mime-magic');
     $this->setOption('stop-on-error');
     $this->setOption('stats');
+    $this->setOption('force');
 
     $this->setParameter($source);
     $this->setParameter($this->getBucket() . '/' . $target);
