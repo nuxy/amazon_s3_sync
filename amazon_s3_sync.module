@@ -5,6 +5,8 @@
  * Synchronize files with an Amazon S3 bucket across multiple regions.
  */
 
+use Drupal\image\Entity\ImageStyle;
+
 /**
  * Implements hook_file_url_alter().
  */
@@ -30,24 +32,62 @@ function amazon_s3_sync_file_url_alter(&$uri) {
 }
 
 /**
- * Implements hook_file_delete().
+ * Implements hook_entity_delete().
  */
-function amazon_s3_sync_file_delete(Drupal\Core\Entity\EntityInterface $entity) {
-  amazon_s3_sync_file($entity->getFileUri());
+function amazon_s3_sync_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
+  amazon_s3_sync_entity($entity);
 }
 
 /**
- * Implements hook_file_insert().
+ * Implements hook_entity_insert().
  */
-function amazon_s3_sync_file_insert(Drupal\Core\Entity\EntityInterface $entity) {
-  amazon_s3_sync_file($entity->getFileUri());
+function amazon_s3_sync_entity_insert(Drupal\Core\Entity\EntityInterface $entity) {
+  amazon_s3_sync_entity($entity);
 }
 
 /**
- * Implements hook_file_update().
+ * Implements hook_entity_update().
  */
-function amazon_s3_sync_file_update(Drupal\Core\Entity\EntityInterface $entity) {
-  amazon_s3_sync_file($entity->getFileUri());
+function amazon_s3_sync_entity_update(Drupal\Core\Entity\EntityInterface $entity) {
+  amazon_s3_sync_entity($entity);
+}
+
+/**
+ * Synchronize file updates with the Amazon S3 bucket(s).
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity object.
+ */
+function amazon_s3_sync_entity(Drupal\Core\Entity\EntityInterface $entity) {
+  $fields = array_keys($entity->toArray());
+  foreach ($fields as $field_id) {
+
+    // Process entity fields.
+    if (preg_match('/^field_/', $field_id)) {
+      $field_item = $entity->get($field_id);
+      $field_type = $field_item->getFieldDefinition()->getType();
+
+      if ($field_type == 'file') {
+        amazon_s3_sync_file($field_item->entity->getFileUri());
+      }
+
+      if ($field_type == 'image') {
+        $image_styles = \Drupal::service('entity_type.manager')
+          ->getStorage('image_style')->loadMultiple();
+
+        // Create image derivatives.
+        foreach ($image_styles as $image_style) {
+          $original_uri = $field_item->entity->getFileUri();
+
+          $derivative_uri = $image_style->buildUri($original_uri);
+
+          $image_style->createDerivative($original_uri, $derivative_uri);
+
+          amazon_s3_sync_file($derivative_uri);
+        }
+      }
+    }
+  }
 }
 
 /**

@@ -131,6 +131,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
       }
     }
 
+    $this->reset();
+
     return TRUE;
   }
 
