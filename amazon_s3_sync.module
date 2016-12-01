@@ -11,12 +11,14 @@ use Drupal\image\Entity\ImageStyle;
  * Implements hook_file_url_alter().
  */
 function amazon_s3_sync_file_url_alter(&$uri) {
-  if (preg_match('/^public:\/\/(.*)$/', $uri, $matches)) {
-    $path = $matches[1];
+  $config = \Drupal::Config('amazon_s3_sync.config');
 
-    $config = \Drupal::Config('amazon_s3_sync.config');
+  if ($config->get('rewrite_url')) {
 
-    if ($config->get('rewrite_url')) {
+    // Rewrite the URI with the Virtual Hosting defined Common name.
+    if (preg_match('/^public:\/\/(.*)$/', $uri, $matches)) {
+      $path = $matches[1];
+
       $excludes = $config->get('s3cmd_excludes');
       foreach ($excludes as $value) {
         if (fnmatch($value, $path)) {
@@ -32,87 +34,94 @@ function amazon_s3_sync_file_url_alter(&$uri) {
 }
 
 /**
- * Implements hook_entity_delete().
+ * Implements hook_file_update().
  */
-function amazon_s3_sync_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
-  amazon_s3_sync_entity($entity);
-}
+function amazon_s3_sync_file_update(Drupal\Core\Entity\EntityInterface $entity) {
+  $config = \Drupal::Config('amazon_s3_sync.config');
 
-/**
- * Implements hook_entity_insert().
- */
-function amazon_s3_sync_entity_insert(Drupal\Core\Entity\EntityInterface $entity) {
-  amazon_s3_sync_entity($entity);
-}
-
-/**
- * Implements hook_entity_update().
- */
-function amazon_s3_sync_entity_update(Drupal\Core\Entity\EntityInterface $entity) {
-  amazon_s3_sync_entity($entity);
-}
-
-/**
- * Generate and synchronize files that are normally created on request.
- *
- * This is workaround for how Drupal handles CRUD file operations due to  
- * cases where the CDN source must be immediately available, and will be
- * directly accessed using a non-view approach (ex: REST export/AJAX)
- *
- * @param \Drupal\Core\Entity\EntityInterface $entity
- *   The entity object.
- */
-function amazon_s3_sync_entity(Drupal\Core\Entity\EntityInterface $entity) {
-  $fields = array_keys($entity->toArray());
-  foreach ($fields as $field_id) {
-
-    // Process entity fields.
-    if (preg_match('/^field_/', $field_id)) {
-      $field_item = $entity->get($field_id);
-      $field_type = $field_item->getFieldDefinition()->getType();
-
-      if ($field_type == 'file') {
-        amazon_s3_sync_file($field_item->entity->getFileUri());
-      }
-
-      if ($field_type == 'image') {
-        $image_styles = \Drupal::service('entity_type.manager')
-          ->getStorage('image_style')->loadMultiple();
-
-        // Create image derivatives.
-        foreach ($image_styles as $image_style) {
-          $original_uri = $field_item->entity->getFileUri();
-
-          $derivative_uri = $image_style->buildUri($original_uri);
-
-          $image_style->createDerivative($original_uri, $derivative_uri);
-
-          amazon_s3_sync_file($derivative_uri);
-        }
-      }
-    }
+  if ($config->get('rewrite_url')) {
+    amazon_s3_sync_content($entity);
   }
 }
 
 /**
- * Synchronize file updates with the Amazon S3 bucket(s).
+ * Sync content, including derivatives normally generated on the first request.
+ *
+ * This is workaround for how Drupal handles CRUD file operations in cases
+ * where the CDN source must be immediately available (images) and will be
+ * accessed using a non-view approach (ex: REST export/AJAX)
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity object.
+ *
+ * @return bool
+ *   TRUE if success, FALSE if not.
+ */
+function amazon_s3_sync_content(Drupal\Core\Entity\EntityInterface $entity) {
+  $file_uri = $entity->getFileUri();
+
+  $image_factory = \Drupal::service('image.factory');
+  $image = $image_factory->get($file_uri);
+
+  if (!$image->isValid()) {
+    return amazon_s3_sync_file($file_uri);
+  }
+
+  $styles = ImageStyle::loadMultiple();
+  foreach ($styles as $style) {
+    $derivative_uri = $style->buildUri($file_uri);
+
+    $deleted = FALSE;
+
+    if ($entity->isNewRevision() || !file_exists($derivative_uri)) {
+
+      // Create the image derivative.
+      $style->createDerivative($file_uri, $derivative_uri);
+    }
+    elseif ($entity->isTemporary()) {
+
+      // Delete the image derivative.
+      $style->flush($file_uri);
+
+      $deleted = TRUE;
+    }
+
+    if (!amazon_s3_sync_file($derivative_uri, $deleted)) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * Synchronize file(s) with the Amazon S3 bucket(s).
  *
  * @param string $uri
  *   Drupal public: file path.
+ * @param bool $delete
+ *   Delete the file.
+ *
+ * @return bool
+ *   TRUE if success, FALSE if not.
  */
-function amazon_s3_sync_file($uri) {
+function amazon_s3_sync_file($uri, $delete = FALSE) {
   $config = \Drupal::Config('amazon_s3_sync.config');
 
+  // Get local source and target path.
   $source = \Drupal::service('file_system')->realpath($uri);
+  $target = file_uri_target($uri);
 
-  if (file_exists($source)) {
-    $target = file_uri_target($uri);
+  // Prepare S3cmd client request.
+  $s3cmd = \Drupal::service('amazon_s3_sync.s3cmd');
+  $s3cmd->dry_run = $config->get('dry_run');
+  $s3cmd->debug   = $config->get('debug');
+  $s3cmd->verbose = $config->get('verbose');
 
-    // Sync the file using the S3cmd client.
-    $s3cmd = \Drupal::service('amazon_s3_sync.s3cmd');
-    $s3cmd->dry_run = $config->get('dry_run');
-    $s3cmd->debug   = $config->get('debug');
-    $s3cmd->verbose = $config->get('verbose');
-    $s3cmd->sync($source, $target);
+  if ($delete) {
+    return $s3cmd->delete($target);
+  }
+  else {
+    return $s3cmd->sync($source, $target);
   }
 }
