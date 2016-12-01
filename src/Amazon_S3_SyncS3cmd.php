@@ -40,6 +40,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     '*.yml',
     'README.txt',
     'config__*',
+    'logs',
     'private',
   );
 
@@ -93,20 +94,40 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    */
   // @codingStandardsIgnoreLine
   public function empty($region_code) {
+    if (empty($region_code)) {
+      return FALSE;
+    }
+
     $this->setOption('region', $region_code);
     $this->setOption('recursive');
     $this->setOption('force');
 
     $this->setParameter($this->getBucket());
 
-    $this->execute('del');
+    return $this->execute('del');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  // @codingStandardsIgnoreLine
+  public function delete($target) {
+    if (empty($target)) {
+      return FALSE;
+    }
+
+    $this->setParameter($this->getBucket() . '/' . $target);
+
+    return $this->updateRegions(function() {
+      return $this->execute('del');
+    });
   }
 
   /**
    * {@inheritdoc}
    */
   public function sync($source, $target = NULL) {
-    if (!$source) {
+    if (empty($source)) {
       return FALSE;
     }
 
@@ -121,26 +142,41 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setParameter($source);
     $this->setParameter($this->getBucket() . '/' . $target);
 
-    $regions = $this->config->get('aws_regions');
-    foreach ($regions as $code => $region) {
-      if ($region['enabled']) {
-        $this->setOption('region', $code);
-
-        if (!$this->execute('sync')) {
-          return FALSE;
-        }
-      }
-    }
-
-    $this->reset();
-
-    return TRUE;
+    return $this->updateRegions(function() {
+      return $this->execute();
+    });
   }
 
   /**
    * {@inheritdoc}
    */
-  private function execute($command) {
+  public function setOption($key, $value = NULL) {
+    if (!empty($key)) {
+      $this->options[$key] = $value;
+    }
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParameter($value) {
+    if (!empty($value)) {
+      $this->parameters[] = $value;
+    }
+    return $this;
+  }
+
+  /**
+   * Execute an S3cmd remote operation.
+   *
+   * @param string $command
+   *   Command to run (default: sync).
+   *
+   * @return bool
+   *   TRUE if success, FALSE if not.
+   */
+  private function execute($command = 'sync') {
     $s3cmd_path = $this->config->get('s3cmd_path');
     if (!file_exists($s3cmd_path)) {
       return FALSE;
@@ -187,26 +223,6 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
 
       return FALSE;
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setOption($key, $value = NULL) {
-    if (!empty($key)) {
-      $this->options[$key] = $value;
-    }
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setParameter($value) {
-    if (!empty($value)) {
-      $this->parameters[] = $value;
-    }
-    return $this;
   }
 
   /**
@@ -313,6 +329,32 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     if ($this->parameters) {
       return implode(' ', $this->parameters);
     }
+  }
+
+  /**
+   * Run callback-based operations across enabled regions.
+   *
+   * @param func $callback
+   *   Callback function.
+   *
+   * @return bool
+   *   TRUE if success, FALSE if not.
+   */
+  private function updateRegions($callback) {
+    $regions = $this->config->get('aws_regions');
+    foreach ($regions as $code => $region) {
+      if ($region['enabled']) {
+        $this->setOption('region', $code);
+
+        if (!$callback()) {
+          return FALSE;
+        }
+      }
+    }
+
+    $this->reset();
+
+    return TRUE;
   }
 
   /**

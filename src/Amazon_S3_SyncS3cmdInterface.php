@@ -22,6 +22,15 @@ interface Amazon_S3_SyncS3cmdInterface {
   public function empty($region_code);
 
   /**
+   * Delete file from the Amazon S3 bucket.
+   *
+   * @return bool
+   *   TRUE if success, FALSE if not.
+   */
+  // @codingStandardsIgnoreLine
+  public function delete($target);
+
+  /**
    * Synchronize Drupal files with the Amazon S3 bucket(s).
    *
    * @param string $source
