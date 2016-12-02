@@ -2,8 +2,6 @@
 
 Synchronize files with an Amazon S3 bucket across multiple regions.
 
-This module is **currently in development**.  You have been warned.
-
 ## Features
 
 - Easy to set-up. All you need is your _AWS Access Key_, _Security Key_, and an existing _S3 bucket_.
