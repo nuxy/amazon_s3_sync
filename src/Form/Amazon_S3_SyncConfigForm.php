@@ -77,6 +77,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config');
 
+    $bucket_name = $config->get('s3_bucket_name');
+
     $table_header = array(
       'name' => t('Region Name'),
       'code' => t('Region'),
@@ -86,8 +88,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $table_defaults = array();
     $table_options  = array();
     $table_states   = array();
-
-    $bucket_name = $config->get('s3_bucket_name');
 
     foreach ($config->get('aws_regions') as $code => $region) {
       $endpoint = $region['endpoint'];
@@ -108,6 +108,11 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
       $table_states[] = array('input[name="aws_regions[' . $code . ']"]' => array('checked' => TRUE));
     }
+
+    // Attach custom JavaScript to the form.
+    $form['#attached'] = array(
+      'library' => array('amazon_s3_sync/amazon_s3_sync'),
+    );
 
     $form['aws_regions'] = array(
       '#type' => 'tableselect',
@@ -284,9 +289,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#options' => array_column($table_options, 'endpoint', 'endpoint'),
       '#states' => array(
         'visible' => array(
-          array($table_states),
-          'or',
-          array('input[name="rewrite_url"]' => array('checked' => TRUE)),
+          $table_states,
+          'input[name="rewrite_url"]' => array('checked' => TRUE),
         ),
       ),
     );
