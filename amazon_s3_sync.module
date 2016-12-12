@@ -69,9 +69,18 @@ function amazon_s3_sync_content(Drupal\Core\Entity\EntityInterface $entity) {
 
   $styles = ImageStyle::loadMultiple();
   foreach ($styles as $style) {
-    $derivative_uri = $style->buildUri($file_uri);
-
     $deleted = FALSE;
+
+    $path_info = pathinfo($file_uri);
+
+    if ($style->getDerivativeExtension($path_info['extension']) != $path_info['extension']) {
+      $target = $path_info['dirname'] . DIRECTORY_SEPARATOR . $path_info['filename'];
+    }
+    else {
+      $target = $file_uri;
+    }
+
+    $derivative_uri = $style->buildUri($target);
 
     if ($entity->isNewRevision() || !file_exists($derivative_uri)) {
 
