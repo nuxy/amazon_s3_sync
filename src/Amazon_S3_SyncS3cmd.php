@@ -116,7 +116,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
       return FALSE;
     }
 
-    $this->setParameter($this->getBucket() . '/' . $target);
+    $this->setParameter($this->getBucket() . DIRECTORY_SEPARATOR . $target);
 
     return $this->updateRegions(function() {
       return $this->execute('del');
@@ -140,7 +140,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setOption('force');
 
     $this->setParameter($source);
-    $this->setParameter($this->getBucket() . '/' . $target);
+    $this->setParameter($this->getBucket() . DIRECTORY_SEPARATOR . $target);
 
     return $this->updateRegions(function() {
       return $this->execute();
