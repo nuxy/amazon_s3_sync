@@ -373,7 +373,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     }
 
     if (!empty($form_state->getValue('endpoint')) &&
-        !preg_match('/^' . $common_name . '/', $form_state->getValue('endpoint'))) {
+        !preg_match('/^' . $common_name . DIRECTORY_SEPARATOR, $form_state->getValue('endpoint'))) {
       $form_state->setErrorByName('endpoint', t('The selected endpoint is currently disabled.'));
     }
 
@@ -444,7 +444,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   public function submitSyncFiles(array &$form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config');
 
-    $path = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/';
+    $path = DRUPAL_ROOT . DIRECTORY_SEPARATOR . PublicStream::basePath() . DIRECTORY_SEPARATOR;
 
     $operations[] = array(
       '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm::submitSyncFilesBatch', array($this, $path),
