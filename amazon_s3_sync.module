@@ -63,8 +63,11 @@ function amazon_s3_sync_content(Drupal\Core\Entity\EntityInterface $entity) {
   $image_factory = \Drupal::service('image.factory');
   $image = $image_factory->get($file_uri);
 
-  if (!$image->isValid()) {
-    return amazon_s3_sync_file($file_uri);
+  if ($image->isValid()) {
+    amazon_s3_sync_file($file_uri);
+  }
+  else {
+    return FALSE;
   }
 
   $styles = ImageStyle::loadMultiple();
@@ -96,6 +99,10 @@ function amazon_s3_sync_content(Drupal\Core\Entity\EntityInterface $entity) {
     }
 
     if (!amazon_s3_sync_file($derivative_uri, $deleted)) {
+      return FALSE;
+    }
+
+    if (!amazon_s3_sync_file($file_uri, $deleted)) {
       return FALSE;
     }
   }
