@@ -79,6 +79,8 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $bucket_name = $config->get('s3_bucket_name');
 
+    $configured = ($bucket_name) ? TRUE : FALSE;
+
     $table_header = array(
       'name' => t('Region Name'),
       'code' => t('Region'),
@@ -121,20 +123,21 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#default_value' => $table_defaults,
       '#empty' => t('No availability zones available.'),
       '#multiple' => TRUE,
+      '#access' => $configured,
     );
 
     $s3cmd_path = $config->get('s3cmd_path');
+    $s3cmd_exists = file_exists($s3cmd_path);
 
-    if ($bucket_name && $s3cmd_path) {
-      $form['sync_files'] = array(
-        '#type' => 'submit',
-        '#value' => t('Sync files'),
-        '#submit' => array('::submitSyncFiles'),
-        '#states' => array(
-          'visible' => $table_states,
-        ),
-      );
-    }
+    $form['sync_files'] = array(
+      '#type' => 'submit',
+      '#value' => t('Sync files'),
+      '#submit' => array('::submitSyncFiles'),
+      '#states' => array(
+        'visible' => $table_states,
+      ),
+      '#access' => $s3cmd_exists,
+    );
 
     $form['s3cmd'] = array(
       '#type' => 'details',
@@ -142,8 +145,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#description' => t('Command line tool for managing Amazon S3 and CloudFront services.'),
       '#open' => TRUE,
     );
-
-    $s3cmd_exists = file_exists($s3cmd_path);
 
     if (!$s3cmd_exists) {
 
@@ -186,6 +187,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $form['s3cmd']['options'] = array(
       '#type' => 'container',
       '#prefix' => '<strong>' . t('Script options') . '</strong>',
+      '#access' => $configured,
     );
 
     $form['s3cmd']['options']['dry_run'] = array(
@@ -268,7 +270,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     $form['virtual_hosting'] = array(
       '#type' => 'details',
       '#title' => t('Virtual Hosting'),
-      '#description' => t('If your bucket name and domain name are <em>files.drupal.com</em>, the CNAME record should alias <em>files.drupal.com.s3.amazonaws.com</em>'),
+      '#description' => t('If your bucket name and domain name are <em>files.drupal.com</em>, the CNAME record should alias <em>files.drupal.com</em>.s3.amazonaws.com'),
       '#open' => TRUE,
     );
 
@@ -293,14 +295,13 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
           'input[name="rewrite_url"]' => array('checked' => TRUE),
         ),
       ),
+      '#access' => $configured,
     );
 
     $form['virtual_hosting']['options'] = array(
       '#type' => 'container',
       '#prefix' => '<strong>' . t('Website options') . '</strong>',
-      '#states' => array(
-        'hidden' => array('input[name="endpoint"]' => array('filled' => FALSE)),
-      ),
+      '#access' => $configured,
     );
 
     $form['virtual_hosting']['options']['rewrite_url'] = array(
@@ -308,7 +309,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#title' => t('Rewrite URLs for <em>public://</em> files to the Common name above. <strong class="color-warning">Warning:</strong> S3cmd excludes will be ignored.'),
       '#default_value' => ($config->get('rewrite_url')) ? TRUE : FALSE,
       '#states' => array(
-        'disabled' => array('input[name="common_name"]' => array('filled' => FALSE)),
+        'enabled' => array($table_states),
       ),
     );
 
