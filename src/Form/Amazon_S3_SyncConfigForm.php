@@ -312,20 +312,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       ),
     );
 
-    $form['virtual_hosting']['options'] = array(
-      '#type' => 'container',
-      '#prefix' => '<strong>' . t('Website options') . '</strong>',
-    );
-
-    $form['virtual_hosting']['options']['rewrite_url'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Rewrite URLs for <em>public://</em> files to the Common name above. <strong class="color-warning">Warning:</strong> S3cmd excludes will be ignored.'),
-      '#default_value' => ($config->get('rewrite_url')) ? TRUE : FALSE,
-      '#states' => array(
-        'disabled' => array('input[name="common_name"]' => array('filled' => FALSE)),
-      ),
-    );
-
     /*$form['virtual_hosting']['options']['enable_ssl'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable SSL on public file requests'),
