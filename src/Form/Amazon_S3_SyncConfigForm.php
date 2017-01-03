@@ -359,11 +359,6 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $form_state->setErrorByName('common_name', t('The common name entered is not a valid CNAME record.'));
     }
 
-    if (!empty($form_state->getValue('endpoint')) &&
-        !preg_match('/^' . $common_name . DIRECTORY_SEPARATOR, $form_state->getValue('endpoint'))) {
-      $form_state->setErrorByName('endpoint', t('The selected endpoint is currently disabled.'));
-    }
-
     drupal_get_messages('error');
   }
 
