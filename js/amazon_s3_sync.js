@@ -10,6 +10,7 @@
         $('tbody .form-checkbox', table).each(function(index) {
           if (this.checked) {
             options[index].disabled = false;
+            options[index].selected = true;
           }
           else {
             options[index].disabled = true;
