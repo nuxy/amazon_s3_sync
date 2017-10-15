@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmd.
- */
-
 namespace Drupal\amazon_s3_sync;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -14,27 +9,36 @@ use Psr\Log\LoggerInterface;
 /**
  * Defines a Amazon_S3_Sync s3cmd object.
  */
+// @codingStandardsIgnoreLine
 class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
 
   /**
+   * Simulate sync process without syncing files.
+   *
    * @var bool
    */
-  public $dry_run = FALSE;
+  public $dryRun = FALSE;
 
   /**
+   * Enable logger debug messages.
+   *
    * @var bool
    */
   public $debug = FALSE;
 
   /**
+   * Enable verbose debug messages.
+   *
    * @var bool
    */
   public $verbose = FALSE;
 
   /**
+   * List of files that should never by synced.
+   *
    * @var array
    */
-  public static $excludes = array(
+  public static $excludes = [
     '.htaccess',
     '*.php',
     '*.yml',
@@ -42,22 +46,28 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     'config__*',
     'logs',
     'private',
-  );
+  ];
 
   /**
+   * Configuration instance.
+   *
    * @var object
    */
   private $config;
 
   /**
+   * List of S3cmd [options].
+   *
    * @var array
    */
-  private $options = array();
+  private $options = [];
 
   /**
+   * List of S3cmd [parameters].
+   *
    * @var array
    */
-  private $parameters = array();
+  private $parameters = [];
 
   /**
    * The settings instance.
@@ -118,9 +128,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
 
     $this->setParameter($this->getBucket() . DIRECTORY_SEPARATOR . $target);
 
-    return $this->updateRegions(function() {
+    return $this->updateRegions(function () {
       return $this->execute('del');
-    });
+    })
   }
 
   /**
@@ -142,7 +152,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setParameter($source);
     $this->setParameter($this->getBucket() . DIRECTORY_SEPARATOR . $target);
 
-    return $this->updateRegions(function() {
+    return $this->updateRegions(function () {
       return $this->execute();
     });
   }
@@ -184,7 +194,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
 
     $debug = FALSE;
 
-    if ($this->dry_run) {
+    if ($this->dryRun) {
       $this->setOption('dry-run');
       $debug = TRUE;
     }
@@ -203,7 +213,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     $this->setOption('secret_key', $this->getSecretKey());
 
     try {
-      exec($s3cmd_path .' '. $this->getOptions() .' '. $command .' '. $this->getParameters() . ' 2>&1', $output);
+      exec($s3cmd_path . ' ' . $this->getOptions() . ' ' . $command . ' ' . $this->getParameters() . ' 2>&1', $output);
 
       if (!empty($output)) {
         $message = implode('<br>', $output);
@@ -236,8 +246,9 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    *   Option name (optional).
    *
    * @return array
+   *   List of arguments.
    */
-  private function formatOptions($array, &$args = array(), $name = NULL) {
+  private function formatOptions(array $array, array &$args = [], $name = NULL) {
     if (!empty($array)) {
       foreach ($array as $key => $value) {
         $key = $name ?: $key;
@@ -254,7 +265,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
           $value = escapeshellarg($value);
         }
 
-        $args[] = trim('--' . $key .' '. $value);
+        $args[] = trim('--' . $key . ' ' . $value);
       }
       return $args;
     }
@@ -264,6 +275,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Return user defined bucket in AWS required format.
    *
    * @return string
+   *   Bucket name.
    */
   private function getBucket() {
     $name = $this->config->get('s3_bucket_name');
@@ -276,6 +288,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Return merged exclude defaults with configuration defined values.
    *
    * @return array
+   *   List of files to exclude.
    */
   private function getExcludeList() {
     $excludes = $this->config->get('s3cmd_excludes');
@@ -291,6 +304,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Return AWS access key from settings.php/configuration.
    *
    * @return string
+   *   AWS access key.
    */
   private function getAccessKey() {
     return ($this->settings->get('s3_access_key'))
@@ -302,6 +316,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Return AWS secret key from settings.php/configuration.
    *
    * @return string
+   *   AWS secret.
    */
   private function getSecretKey() {
     return ($this->settings->get('s3_secret_key'))
@@ -313,6 +328,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Return S3cmd required options as a concatenated string.
    *
    * @return string
+   *   Options in string format.
    */
   private function getOptions() {
     if ($this->options) {
@@ -324,6 +340,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Return S3cmd required parameters as a concatenated string.
    *
    * @return string
+   *   Parameters in string format.
    */
   private function getParameters() {
     if ($this->parameters) {
@@ -340,7 +357,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * @return bool
    *   TRUE if success, FALSE if not.
    */
-  private function updateRegions($callback) {
+  private function updateRegions(func $callback) {
     $regions = $this->config->get('aws_regions');
     foreach ($regions as $code => $region) {
       if ($region['enabled']) {
@@ -361,7 +378,8 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
    * Reset the internal state of S3cmd required values.
    */
   private function reset() {
-    $this->parameters = array();
-    $this->options    = array();
+    $this->parameters = [];
+    $this->options    = [];
   }
+
 }

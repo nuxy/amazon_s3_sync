@@ -3,7 +3,6 @@
     "description": "Synchronize files with an Amazon S3 bucket across multiple regions.",
     "type": "project",
     "require-dev": {
-        "drupal/coder": "^8.2"
     },
     "license": "MIT",
     "authors": [
@@ -11,5 +10,8 @@
             "name": "Marc S. Brooks",
             "email": "devel@mbrooks.info"
         }
-    ]
+    ],
+    "require": {
+        "drupal/coder": "^8.2"
+    }
 }

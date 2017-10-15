@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm.
- */
-
 namespace Drupal\amazon_s3_sync\Form;
 
 use Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmd;
@@ -20,6 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Defines a form that configures Amazon_S3_Sync settings.
  */
+// @codingStandardsIgnoreLine
 class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
   /**
@@ -81,42 +77,42 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $configured = ($bucket_name) ? TRUE : FALSE;
 
-    $table_header = array(
+    $table_header = [
       'name' => t('Region Name'),
       'code' => t('Region'),
       'endpoint' => t('Endpoint'),
-    );
+    ];
 
-    $table_defaults = array();
-    $table_options  = array();
-    $table_states   = array();
+    $table_defaults = [];
+    $table_options  = [];
+    $table_states   = [];
 
     foreach ($config->get('aws_regions') as $code => $region) {
       $endpoint = $region['endpoint'];
-      $enabled  = $region['enabled'];
+      $enabled = $region['enabled'];
 
       $table_defaults[$code] = $enabled;
 
-      $table_options[$code] = array(
+      $table_options[$code] = [
         'name' => $region['name'],
         'code' => $code,
         'endpoint' => $endpoint,
-      );
+      ];
 
       if ($bucket_name && $enabled) {
         $table_options[$code]['endpoint'] = $bucket_name . '.' . $endpoint;
         $table_options[$code]['#attributes']['class'][] = 'selected';
       }
 
-      $table_states[] = array('input[name="aws_regions[' . $code . ']"]' => array('checked' => TRUE));
+      $table_states[] = ['input[name="aws_regions[' . $code . ']"]' => ['checked' => TRUE]];
     }
 
     // Attach custom JavaScript to the form.
-    $form['#attached'] = array(
-      'library' => array('amazon_s3_sync/amazon_s3_sync'),
-    );
+    $form['#attached'] = [
+      'library' => ['amazon_s3_sync/amazon_s3_sync'],
+    ];
 
-    $form['aws_regions'] = array(
+    $form['aws_regions'] = [
       '#type' => 'tableselect',
       '#header' => $table_header,
       '#options' => $table_options,
@@ -124,27 +120,27 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#empty' => t('No availability zones available.'),
       '#multiple' => TRUE,
       '#access' => $configured,
-    );
+    ];
 
     $s3cmd_path = $config->get('s3cmd_path');
     $s3cmd_exists = file_exists($s3cmd_path);
 
-    $form['sync_files'] = array(
+    $form['sync_files'] = [
       '#type' => 'submit',
       '#value' => t('Sync files'),
-      '#submit' => array('::submitSyncFiles'),
-      '#states' => array(
+      '#submit' => ['::submitSyncFiles'],
+      '#states' => [
         'visible' => $table_states,
-      ),
+      ],
       '#access' => $s3cmd_exists,
-    );
+    ];
 
-    $form['s3cmd'] = array(
+    $form['s3cmd'] = [
       '#type' => 'details',
       '#title' => 's3cmd',
       '#description' => t('Command line tool for managing Amazon S3 and CloudFront services.'),
       '#open' => TRUE,
-    );
+    ];
 
     if (!$s3cmd_exists) {
 
@@ -153,66 +149,66 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $s3cmd_obj = Url::fromUri($s3cmd_url);
       $s3cmd_link = \Drupal::l($s3cmd_url, $s3cmd_obj);
 
-      drupal_set_message(t('The required dependency s3cmd is not installed. Please see @link for details.', array('@link' => $s3cmd_link)), 'error');
+      drupal_set_message(t('The required dependency s3cmd is not installed. Please see @link for details.', ['@link' => $s3cmd_link]), 'error');
     }
 
     $s3cmd_path_default = '/usr/bin/s3cmd';
 
-    $form['s3cmd']['s3cmd_path'] = array(
+    $form['s3cmd']['s3cmd_path'] = [
       '#type' => 'textfield',
       '#title' => t('Path to binary'),
       '#description' => t('Must be an absolute path. This may vary based on your server set-up.'),
       '#default_value' => (file_exists($s3cmd_path_default)) ? $s3cmd_path_default : $config->get('s3cmd_path'),
       '#maxlength' => 25,
       '#required' => TRUE,
-    );
+    ];
 
     if (!$s3cmd_exists) {
       $form['s3cmd']['s3cmd_path']['#attributes']['class'][] = 'error';
       $form['s3cmd']['s3cmd_path']['#attributes']['placeholder'] = $s3cmd_path_default;
     }
 
-    $form['s3cmd']['s3cmd_excludes'] = array(
+    $form['s3cmd']['s3cmd_excludes'] = [
       '#type' => 'textfield',
       '#title' => t('Excludes'),
       '#description' => t('Filenames and paths matching GLOB will be excluded. <strong class="color-warning">Warning:</strong> Private files that exist in the <em>Public file system path</em> should be added here.'),
       '#default_value' => $config->get('s3cmd_excludes'),
       '#maxlength' => 255,
       '#required' => FALSE,
-      '#attributes' => array(
+      '#attributes' => [
         'placeholder' => 'directory/* image.* image.jpg',
-      ),
-    );
+      ],
+    ];
 
-    $form['s3cmd']['options'] = array(
+    $form['s3cmd']['options'] = [
       '#type' => 'container',
       '#prefix' => '<strong>' . t('Script options') . '</strong>',
       '#access' => $configured,
-    );
+    ];
 
-    $form['s3cmd']['options']['dry_run'] = array(
+    $form['s3cmd']['options']['dry_run'] = [
       '#type' => 'checkbox',
       '#title' => t('Simulate the upload operation without touching the S3 bucket.'),
       '#default_value' => ($config->get('dry_run')) ? TRUE : FALSE,
-    );
+    ];
 
-    $form['s3cmd']['options']['debug'] = array(
+    $form['s3cmd']['options']['debug'] = [
       '#type' => 'checkbox',
       '#title' => t('Enable debug output. <strong class="color-warning">Warning:</strong> AWS Security Credentials will be exposed in the log output.</strong>'),
       '#default_value' => ($config->get('debug')) ? TRUE : FALSE,
-      '#states' => array(
-        'disabled' => array('input[name="verbose"]' => array('checked' => TRUE)),
-      ),
-    );
+      '#states' => [
+        'disabled' => ['input[name="verbose"]' => ['checked' => TRUE]],
+      ],
+    ];
 
-    $form['s3cmd']['options']['verbose'] = array(
+    $form['s3cmd']['options']['verbose'] = [
       '#type' => 'checkbox',
       '#title' => t('Enable verbose output.'),
       '#default_value' => ($config->get('verbose')) ? TRUE : FALSE,
-      '#states' => array(
-        'disabled' => array('input[name="debug"]' => array('checked' => TRUE)),
-      ),
-    );
+      '#states' => [
+        'disabled' => ['input[name="debug"]' => ['checked' => TRUE]],
+      ],
+    ];
 
     if (!$this->settings->get('s3_bucket_name') || !$this->settings->get('s3_access_key') || !$this->settings->get('s3_secret_key')) {
 
@@ -226,101 +222,105 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       $aws_obj2 = Url::fromUri($aws_url2);
       $aws_link2 = \Drupal::l('S3 Bucket', $aws_obj2);
 
-      $form['amazon_s3'] = array(
+      $form['amazon_s3'] = [
         '#type' => 'details',
         '#title' => t('Simple Storage Service (S3)'),
-        '#description' => t('Setup your @link1 and @link2 below. This can also be defined in <em>settings.php</em>', array('@link1' => $aws_link1, '@link2' => $aws_link2)),
+        '#description' => t('Setup your @link1 and @link2 below. This can also be defined in <em>settings.php</em>', ['@link1' => $aws_link1, '@link2' => $aws_link2]),
         '#open' => TRUE,
-      );
+      ];
 
       if (!$this->settings->get('s3_bucket_name')) {
-        $form['amazon_s3']['bucket_name'] = array(
+        $form['amazon_s3']['bucket_name'] = [
           '#type' => 'textfield',
           '#title' => t('S3 bucket name'),
           '#description' => t('Must be an empty bucket that has <em>View Permissions</em> granted.'),
           '#default_value' => $config->get('s3_bucket_name'),
           '#maxlength' => 63,
           '#required' => TRUE,
-        );
+        ];
       }
 
       if (!$this->settings->get('s3_access_key')) {
-        $form['amazon_s3']['access_key'] = array(
+        $form['amazon_s3']['access_key'] = [
           '#type' => 'textfield',
           '#title' => t('Access Key'),
           '#description' => t('Enter your AWS access key.'),
           '#default_value' => $config->get('s3_access_key'),
           '#maxlength' => 20,
           '#required' => TRUE,
-        );
+        ];
       }
 
       if (!$this->settings->get('s3_secret_key')) {
-        $form['amazon_s3']['secret_key'] = array(
+        $form['amazon_s3']['secret_key'] = [
           '#type' => 'textfield',
           '#title' => t('Secret Key'),
           '#description' => t('Enter your AWS secret key.'),
           '#default_value' => $config->get('s3_secret_key'),
           '#maxlength' => 40,
           '#required' => TRUE,
-        );
+        ];
       }
     }
 
-    $form['virtual_hosting'] = array(
+    $form['virtual_hosting'] = [
       '#type' => 'details',
       '#title' => t('Virtual Hosting'),
       '#description' => t('If your bucket name and domain name are <em>files.drupal.com</em>, the CNAME record should alias <em>files.drupal.com</em>.s3.amazonaws.com'),
       '#open' => TRUE,
-    );
+    ];
 
-    $form['virtual_hosting']['common_name'] = array(
+    $form['virtual_hosting']['common_name'] = [
       '#type' => 'textfield',
       '#title' => t('Common name'),
       '#description' => t('Must be a fully qualified domain name.'),
       '#default_value' => $config->get('common_name'),
       '#maxlength' => 255,
       '#required' => TRUE,
-    );
+    ];
 
-    $form['virtual_hosting']['endpoint'] = array(
+    $form['virtual_hosting']['endpoint'] = [
       '#type' => 'select',
       '#title' => t('Endpoint'),
       '#description' => t('Must reference a region that is currently enabled.'),
       '#default_value' => $config->get('endpoint'),
       '#options' => array_column($table_options, 'endpoint', 'endpoint'),
-      '#states' => array(
-        'visible' => array(
+      '#states' => [
+        'visible' => [
           $table_states,
-          'input[name="rewrite_url"]' => array('checked' => TRUE),
-        ),
-      ),
-      '#access' => $configured,
-    );
 
-    $form['virtual_hosting']['options'] = array(
+          // @codingStandardsIgnoreLine
+          'input[name="rewrite_url"]' => ['checked' => TRUE],
+        ],
+      ],
+      '#access' => $configured,
+    ];
+
+    $form['virtual_hosting']['options'] = [
       '#type' => 'container',
       '#prefix' => '<strong>' . t('Website options') . '</strong>',
       '#access' => $configured,
-    );
+    ];
 
-    $form['virtual_hosting']['options']['rewrite_url'] = array(
+    $form['virtual_hosting']['options']['rewrite_url'] = [
       '#type' => 'checkbox',
       '#title' => t('Rewrite URLs for <em>public://</em> files to the Common name above. <strong class="color-warning">Warning:</strong> S3cmd excludes will be ignored.'),
       '#default_value' => ($config->get('rewrite_url')) ? TRUE : FALSE,
-      '#states' => array(
-        'enabled' => array($table_states),
-      ),
-    );
+      '#states' => [
+        'enabled' => [$table_states],
+      ],
+    ];
 
-    /*$form['virtual_hosting']['options']['enable_ssl'] = array(
+    // @codingStandardsIgnoreStart
+    /*$form['virtual_hosting']['options']['enable_ssl'] = [
       '#type' => 'checkbox',
       '#title' => t('Enable SSL on public file requests'),
       '#default_value' => ($config->get('enable_ssl')) ? TRUE : FALSE,
-      '#states' => array(
-        'disabled' => array('input[name="rewrite_url"]' => array('checked' => FALSE)),
-      ),
-    );*/
+      '#states' => [
+        'disabled' => ['input[name="rewrite_url"]' => ['checked' => FALSE]],
+      ],
+    ];*/
+    // @codingStandardsIgnoreEnd
 
     return parent::buildForm($form, $form_state);
   }
@@ -367,14 +367,14 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('amazon_s3_sync.config')
-      ->set('s3cmd_path',  $form_state->getValue('s3cmd_path'))
+      ->set('s3cmd_path', $form_state->getValue('s3cmd_path'))
       ->set('common_name', $form_state->getValue('common_name'))
-      ->set('endpoint',    $form_state->getValue('endpoint'))
+      ->set('endpoint', $form_state->getValue('endpoint'))
       ->set('rewrite_url', $form_state->getValue('rewrite_url'))
-      ->set('enable_ssl',  $form_state->getValue('enable_ssl'))
-      ->set('dry_run',     $form_state->getValue('dry_run'))
-      ->set('debug',       $form_state->getValue('debug'))
-      ->set('verbose',     $form_state->getValue('verbose'));
+      ->set('enable_ssl', $form_state->getValue('enable_ssl'))
+      ->set('dry_run', $form_state->getValue('dry_run'))
+      ->set('debug', $form_state->getValue('debug'))
+      ->set('verbose', $form_state->getValue('verbose'));
 
     if ($form_state->getValue('s3cmd_excludes')) {
       $excludes = explode(' ', $form_state->getValue('s3cmd_excludes'));
@@ -385,14 +385,14 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
       // Empty bucket contents for unselected regions..
       if (isset($form['aws_regions']['#options'][$key]['#attributes']) && !$value) {
-        $message = t('Deleting contents of Amazon S3 bucket (@bucket_name) in region (@region)', array('@bucket_name' => $config->get('s3_bucket_name'), '@region' => $key));
+        $message = t('Deleting contents of Amazon S3 bucket (@bucket_name) in region (@region)', ['@bucket_name' => $config->get('s3_bucket_name'), '@region' => $key]);
 
         $this->logger->notice($message);
 
         // .. using the S3cmd client.
         $s3cmd = new Amazon_S3_SyncS3cmd($this->configFactory, $this->settings, $this->logger);
         $s3cmd->dry_run = $config->get('dry_run');
-        $s3cmd->debug   = $config->get('debug');
+        $s3cmd->debug = $config->get('debug');
         $s3cmd->verbose = $config->get('verbose');
         $s3cmd->empty($key);
 
@@ -428,19 +428,19 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
     $path = DRUPAL_ROOT . DIRECTORY_SEPARATOR . PublicStream::basePath() . DIRECTORY_SEPARATOR;
 
-    $operations[] = array(
-      '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm::submitSyncFilesBatch', array($this, $path),
-    );
+    $operations[] = [
+      '\Drupal\amazon_s3_sync\Form\Amazon_S3_SyncConfigForm::submitSyncFilesBatch', [$this, $path],
+    ];
 
-    $message = t('Updating Amazon S3 bucket (@bucket_name) selected regions.', array('@bucket_name' => $config->get('s3_bucket_name')));
+    $message = t('Updating Amazon S3 bucket (@bucket_name) selected regions.', ['@bucket_name' => $config->get('s3_bucket_name')]);
 
-    batch_set(array(
+    batch_set([
       'title' => t('Amazon S3 sync'),
       'init_message' => $message,
       'progress_message' => t('Processing..'),
       'operations' => $operations,
-      'finished' => array(get_class($this), 'submitSyncFilesCallback'),
-    ));
+      'finished' => [get_class($this), 'submitSyncFilesCallback'],
+    ]);
 
     $this->logger->notice($message);
   }
@@ -461,7 +461,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     // Sync each file using the S3cmd client.
     $s3cmd = new Amazon_S3_SyncS3cmd($self->configFactory, $self->settings, $self->logger);
     $s3cmd->dry_run = $config->get('dry_run');
-    $s3cmd->debug   = $config->get('debug');
+    $s3cmd->debug = $config->get('debug');
     $s3cmd->verbose = $config->get('verbose');
     $s3cmd->sync($source);
   }
@@ -486,4 +486,5 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
   protected function getEditableConfigNames() {
     return ['amazon_s3_sync.config'];
   }
+
 }
