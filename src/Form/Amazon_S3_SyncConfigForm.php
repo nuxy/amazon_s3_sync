@@ -217,7 +217,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     if (!$this->settings->get('s3_bucket_name') || !$this->settings->get('s3_access_key') || !$this->settings->get('s3_secret_key')) {
 
       // Create link to "AWS Security Credentials".
-      $aws_url1 = 'http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html';
+      $aws_url1 = 'http://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html';
       $aws_obj1 = Url::fromUri($aws_url1);
       $aws_link1 = \Drupal::l(t('AWS Security Credentials'), $aws_obj1);
 
