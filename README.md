@@ -33,11 +33,21 @@ $config['amazon_s3_sync.settings'] = array(
 );
 ```
 
+## Contributions
+
+If you fix a bug, or have a code you want to contribute, please send a pull-request with your changes. (Note: Before committing your code please ensure that you are following the Drupal coding standards)
+
+You can check your code by running the following command:
+
+    $ phpcs --standard=./vendor/drupal/coder/coder_sniffer/Drupal/ruleset.xml src
+
 ## License and Warranty
 
 This package is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose.
 
 _amazon_s3_sync_ is provided under the terms of the [MIT license](http://www.opensource.org/licenses/mit-license.php)
+
+[Amazon](https://amazon.com) is a registered trademark of Amazon.com, Inc.
 
 ## Author
 
