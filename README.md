@@ -1,6 +1,6 @@
 # Amazon S3 sync
 
-Synchronize files with an Amazon S3 bucket across multiple regions.
+Synchronize Drupal 8 files with an Amazon S3 bucket across multiple regions.
 
 ## Features
 
