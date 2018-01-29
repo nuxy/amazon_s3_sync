@@ -147,7 +147,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
       // Create link to S3cmd Github project.
       $s3cmd_url = 'https://github.com/s3tools/s3cmd';
-      $s3cmd_link = Link::fromTextAndUrl($s3cmd_url, Url::fromUri($s3cmd_url, array()))->toString();
+      $s3cmd_link = Link::fromTextAndUrl($s3cmd_url, Url::fromUri($s3cmd_url, []))->toString();
 
       drupal_set_message(t('The required dependency s3cmd is not installed. Please see @link for details.', ['@link' => $s3cmd_link]), 'error');
     }
@@ -214,11 +214,11 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
 
       // Create link to "AWS Security Credentials".
       $aws_url1 = 'http://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html';
-      $aws_link1 = Link::fromTextAndUrl(t('AWS Security Credentials'), Url::fromUri($aws_url1, array()))->toString();
+      $aws_link1 = Link::fromTextAndUrl(t('AWS Security Credentials'), Url::fromUri($aws_url1, []))->toString();
 
       // Create link to "Working with Amazon S3 Buckets".
       $aws_url2 = 'http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html';
-      $aws_link2 = Link::fromTextAndUrl(t('S3 Bucket'), Url::fromUri($aws_url2, array()))->toString();
+      $aws_link2 = Link::fromTextAndUrl(t('S3 Bucket'), Url::fromUri($aws_url2, []))->toString();
 
       $form['amazon_s3'] = [
         '#type' => 'details',

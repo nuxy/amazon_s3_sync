@@ -351,13 +351,13 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
   /**
    * Run callback-based operations across enabled regions.
    *
-   * @param Callable $callback
+   * @param callable $callback
    *   Callback function.
    *
    * @return bool
    *   TRUE if success, FALSE if not.
    */
-  private function updateRegions(Callable $callback) {
+  private function updateRegions(callable $callback) {
     $regions = $this->config->get('aws_regions');
     foreach ($regions as $code => $region) {
       if ($region['enabled']) {
