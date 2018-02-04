@@ -176,7 +176,7 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
       '#maxlength' => 255,
       '#required' => FALSE,
       '#attributes' => [
-        'placeholder' => 'directory/* image.* image.jpg',
+        'placeholder' => 'directory/*/image.jpg image.* image.jpg',
       ],
     ];
 
@@ -377,6 +377,9 @@ class Amazon_S3_SyncConfigForm extends ConfigFormBase {
     if ($form_state->getValue('s3cmd_excludes')) {
       $excludes = explode(' ', $form_state->getValue('s3cmd_excludes'));
       $config->set('s3cmd_excludes', $excludes);
+    }
+    else {
+      $config->set('s3cmd_excludes', []);
     }
 
     foreach ($form_state->getValue('aws_regions') as $key => $value) {
