@@ -6,6 +6,7 @@
  */
 
 use Drupal\image\Entity\ImageStyle;
+use Drupal\amazon_s3_sync\Amazon_S3_SyncS3cmd;
 
 /**
  * Implements hook_file_url_alter().
@@ -19,7 +20,7 @@ function amazon_s3_sync_file_url_alter(&$uri) {
     if (preg_match('/^public:\/\/(.*)$/', $uri, $matches)) {
       $path = $matches[1];
 
-      $excludes = $config->get('s3cmd_excludes');
+      $excludes = array_merge(Amazon_S3_SyncS3cmd::$excludes, $config->get('s3cmd_excludes'));
       foreach ($excludes as $value) {
         if (fnmatch($value, $path)) {
           return;

@@ -46,6 +46,7 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     'config__*',
     'logs',
     'private',
+    'styles/*/public/core/modules/image/sample.png*'
   ];
 
   /**
