@@ -44,9 +44,11 @@ class Amazon_S3_SyncS3cmd implements Amazon_S3_SyncS3cmdInterface {
     '*.yml',
     'README.txt',
     'config__*',
+    'css*',
+    'js*',
     'logs',
     'private',
-    'styles/*/public/core/modules/image/sample.png*'
+    'styles/*/public/core/modules/image/sample.png*',
   ];
 
   /**
